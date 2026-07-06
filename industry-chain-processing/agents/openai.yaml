@@ -1,0 +1,4 @@
+interface:
+  display_name: "Industry Chain Processing"
+  short_description: "Local Handaas enterprise-linking skill."
+  default_prompt: "Use this skill to generate an industry-chain ontology, build high-screen/Handaas filters for L5 nodes, query local enterprise candidates, verify evidence, and return enterprise-linking recommendations."
