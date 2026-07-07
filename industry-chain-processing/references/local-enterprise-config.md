@@ -1,4 +1,4 @@
-# Handaas / High-Screen Local Config
+# Local Enterprise Data Config
 
 ## Config discovery order
 
@@ -27,7 +27,7 @@ Scripts read JSON config from:
     }
   },
   "high_screen": {
-    "url": "https://example.com/high-screen-endpoint",
+    "url": "https://example.com/enterprise-search-endpoint",
     "product_id": "your_high_screen_product_id",
     "secret_id": "your_high_screen_secret_id",
     "secret_key": "your_high_screen_secret_key",

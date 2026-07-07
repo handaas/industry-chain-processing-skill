@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Call a configured Handaas/DAAS data product."""
+"""Call a configured local enterprise evidence data product."""
 from __future__ import annotations
 
 import argparse
@@ -63,7 +63,7 @@ def call_handaas(section: Dict[str, Any], product: str, keyword: str, key_type: 
     code = str(payload.get("code", "")) if payload.get("code") is not None else ""
     message = str(payload.get("msgCN") or payload.get("msgCn") or payload.get("message") or "")
     if code and code != "10000":
-        raise ApiError(message or f"Handaas 返回异常：{code}")
+        raise ApiError(message or f"证据接口返回异常：{code}")
     return {
         "product": product,
         "product_id": request["product_id"],
@@ -76,9 +76,9 @@ def call_handaas(section: Dict[str, Any], product: str, keyword: str, key_type: 
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Call a Handaas data product with local config.")
+    parser = argparse.ArgumentParser(description="Call a configured local enterprise evidence data product.")
     parser.add_argument("--config", help="Config JSON path.")
-    parser.add_argument("--product", required=True, help="Product name configured under handaas.products, e.g. 工商照面")
+    parser.add_argument("--product", required=True, help="Evidence product name configured locally, e.g. 工商照面")
     parser.add_argument("--keyword", required=True, help="Enterprise name, nameId, social credit code, etc.")
     parser.add_argument("--key-type", default="nameId", help="nameId, name, socialCreditCode, regNumber, 企业ID, 企业名称")
     parser.add_argument("--extra-json", default="{}", help="Extra request params JSON, e.g. '{\"pageIndex\":1,\"pageSize\":10}'")

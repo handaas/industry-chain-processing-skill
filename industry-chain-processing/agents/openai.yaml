@@ -1,4 +1,4 @@
 interface:
   display_name: "旷湖产业链分析"
-  short_description: "本地 Handaas/high-screen 产业链企业挂链 Skill。"
-  default_prompt: "使用旷湖产业链分析生成产业链本体、为 L5 节点构造 high-screen/Handaas 条件、查询本地企业候选、核验证据，并输出企业挂链建议。"
+  short_description: "自动拆解产业链、挖掘企业线索并生成报告。"
+  default_prompt: "使用旷湖产业链分析，输入一个行业、赛道或企业名单，自动完成产业链拆解、企业线索挖掘、证据核验、挂链建议和静态 HTML/Markdown 报告生成。"

@@ -1,26 +1,27 @@
-# Ontology Contract
+# Internal Ontology Contract
 
-## Levels
+This file defines the internal hierarchy used by the skill. Do not require users to provide these labels.
 
-- L1: industry chain domain, e.g. `低空经济产业链`.
-- L2: value segment, preferably industry-specific instead of generic upstream/midstream/downstream when possible.
-- L3: industry segment or business module.
-- L4: optional/folded context; this skill normally outputs compact L2 → L3 → L5.
-- L5: product, technology, service, material, equipment, platform, solution, or capability standard node.
+## Internal hierarchy
+
+- Industry domain: the overall chain, e.g. `低空经济产业链`.
+- Value segment: major value-creation area, preferably industry-specific instead of generic upstream/midstream/downstream.
+- Business module: concrete industry segment or business module.
+- Terminal target: product, technology, service, material, equipment, platform, solution, or capability that can be matched to companies.
 
 ## Enterprise boundary
 
-Enterprises are linked records, not ontology nodes.
+Enterprises are linked records, not hierarchy nodes.
 
 ```text
-L1 Industry Chain
-  L2 Value Segment
-    L3 Industry Segment
-      L5 Product/Technology/Service Node
+Industry Chain
+  Value Segment
+    Business Module
+      Terminal Target
         enterprise links: separate candidate records
 ```
 
-## Good L5 examples
+## Good terminal target examples
 
 - eVTOL整机制造
 - 飞控系统
@@ -29,16 +30,16 @@ L1 Industry Chain
 - 碳纤维复合材料结构件
 - 产业招商企业线索核验服务
 
-## Bad L5 examples
+## Bad terminal target examples
 
 - 企业 names such as `亿航智能`, `小鹏汇天`, `大疆`.
 - Vague nodes such as `平台`, `系统`, `服务`, `解决方案`, `其他`.
-- Structural nodes such as `上游`, `中游`, `下游` as L5 names.
+- Structural names such as `上游`, `中游`, `下游`.
 
 ## Validation checklist
 
-- No L6 appears in the ontology output.
+- Do not create extra hierarchy below terminal targets.
 - No enterprise/company/brand names appear as children.
-- L5 nodes have empty `children` in normalized JSON.
-- L5 counts vary by L3 complexity; avoid fixed three-per-L3 output.
-- Every L5 is specific enough to become a high-screen condition.
+- Terminal targets have empty `children` in normalized JSON.
+- Terminal target counts vary by module complexity; avoid fixed counts per module.
+- Every terminal target is specific enough to become an enterprise search strategy.

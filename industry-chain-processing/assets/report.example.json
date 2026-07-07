@@ -1,0 +1,48 @@
+{
+  "title": "低空经济产业链企业线索分析报告",
+  "summary": "围绕低空经济的航空器制造、空域管理、动力系统和运营服务等方向，优先筛选可通过产品、招聘、专利和招投标证据验证的企业线索。",
+  "industry_map": [
+    "航空器制造：eVTOL整机、无人机整机、飞控系统、复合材料结构件",
+    "核心部件：动力电池PACK、电机电控、导航通信、传感器",
+    "低空基础设施：起降场、空域管理平台、飞行服务系统",
+    "运营应用：物流配送、巡检应急、文旅观光、城市交通"
+  ],
+  "priority_segments": [
+    "eVTOL整机制造",
+    "飞控系统",
+    "低空空域管理平台",
+    "动力电池PACK"
+  ],
+  "search_strategy": [
+    "围绕整机制造、总装、适航、试飞、航空器研发等词扩展企业线索。",
+    "结合招聘岗位、专利标题、招投标项目和经营范围做交叉核验。",
+    "排除培训、航拍、旅游观光、维修代理等容易造成噪声的企业。"
+  ],
+  "candidates": [
+    {"id": "demo-001", "name": "示例低空科技有限公司", "socialCreditCode": "DEMO001", "regCapital": "1000万人民币"},
+    {"id": "demo-002", "name": "示例航空装备有限公司", "socialCreditCode": "DEMO002", "regCapital": "5000万人民币"}
+  ],
+  "decisions": [
+    {
+      "enterprise_name": "示例低空科技有限公司",
+      "matched_segment": "eVTOL整机制造",
+      "decision": "confirmed",
+      "evidence_strength": "strong",
+      "reason": "招聘和专利信息均出现 eVTOL、飞行器总装、适航相关表述。",
+      "next_action": "confirm link"
+    },
+    {
+      "enterprise_name": "示例航空装备有限公司",
+      "matched_segment": "飞控系统",
+      "decision": "uncertain",
+      "evidence_strength": "medium",
+      "reason": "经营范围和企业简介相关，但缺少招聘或专利强证据。",
+      "next_action": "manual review"
+    }
+  ],
+  "next_actions": [
+    "对 confirmed 企业抽查证据原文。",
+    "对 uncertain 企业补充招聘、专利或招投标证据。",
+    "对噪声样本补充排除词后重新模拟运行。"
+  ]
+}

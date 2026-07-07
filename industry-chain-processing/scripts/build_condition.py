@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a deterministic high-screen condition group for an L5 industry-chain node."""
+"""Build deterministic enterprise-search JSON for a refined industry segment."""
 from __future__ import annotations
 
 import argparse
@@ -172,14 +172,14 @@ def build_condition_group(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build high-screen condition JSON for an L5 node.")
+    parser = argparse.ArgumentParser(description="Build enterprise-search JSON for a refined industry segment.")
     parser.add_argument("--chain", required=True, help="Industry chain name, e.g. 低空经济")
-    parser.add_argument("--node", required=True, help="L5 node name, e.g. eVTOL整机制造")
+    parser.add_argument("--node", required=True, help="Refined business segment, product, technology, service, or capability, e.g. eVTOL整机制造")
     parser.add_argument("--path", help="Full path separated by > or /.")
     parser.add_argument("--keyword", action="append", default=[], help="Extra business keyword. Repeatable.")
     parser.add_argument("--industry", action="append", default=[], help="Industry path, e.g. 制造业/铁路、船舶、航空航天和其他运输设备制造业")
     parser.add_argument("--exclude", action="append", default=[], help="Extra noise term. Repeatable.")
-    parser.add_argument("--output", help="Write JSON condition to file.")
+    parser.add_argument("--output", help="Write enterprise-search JSON to file.")
     args = parser.parse_args()
 
     path = parse_path(args.path, args.chain, args.node)

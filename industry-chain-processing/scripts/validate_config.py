@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate local Handaas/high-screen config without printing secrets."""
+"""Validate local enterprise data config without printing secrets."""
 from __future__ import annotations
 
 import argparse

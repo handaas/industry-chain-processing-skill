@@ -97,7 +97,7 @@ def md5_hex(text: str) -> str:
 
 
 def python_string(value: Any, nested: bool = False) -> str:
-    """Mimic the high-screen Python signing string used by exported examples."""
+    """Mimic the local enterprise-search signing string used by exported examples."""
     if isinstance(value, dict):
         return "{" + ", ".join(f"'{key}': {python_string(item, True)}" for key, item in value.items()) + "}"
     if isinstance(value, list):
@@ -136,7 +136,7 @@ def get_high_screen_section(config: Dict[str, Any]) -> Dict[str, Any]:
 def product_id_of(products: Dict[str, Any], product_name: str) -> str:
     if product_name not in products:
         available = "、".join(products.keys()) or "无"
-        raise ConfigError(f"未找到 Handaas 产品：{product_name}。可用产品：{available}")
+        raise ConfigError(f"未找到证据产品：{product_name}。可用产品：{available}")
     item = products[product_name]
     if isinstance(item, str):
         return item

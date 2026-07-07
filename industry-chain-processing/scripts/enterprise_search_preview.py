@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Call configured high-screen ES condition preview."""
+"""Preview candidate companies from the configured local enterprise search interface."""
 from __future__ import annotations
 
 import argparse
@@ -43,7 +43,7 @@ def normalize_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return out
 
 
-def build_high_screen_request(section: Dict[str, Any], condition: Any, page_index: int = 1, page_size: int = 20, *, pagination: bool = True) -> Dict[str, Any]:
+def build_enterprise_search_request(section: Dict[str, Any], condition: Any, page_index: int = 1, page_size: int = 20, *, pagination: bool = True) -> Dict[str, Any]:
     filter_string = json_dumps(condition)
     params: Dict[str, Any] = {"filter": filter_string}
     if pagination:
@@ -57,13 +57,13 @@ def build_high_screen_request(section: Dict[str, Any], condition: Any, page_inde
     return {"url": section["url"], "params": params, "call_params": call_params}
 
 
-def call_high_screen_preview(section: Dict[str, Any], condition: Any, page_index: int = 1, page_size: int = 20, timeout: int = 30) -> Dict[str, Any]:
-    request = build_high_screen_request(section, condition, page_index, page_size, pagination=True)
+def call_enterprise_search_preview(section: Dict[str, Any], condition: Any, page_index: int = 1, page_size: int = 20, timeout: int = 30) -> Dict[str, Any]:
+    request = build_enterprise_search_request(section, condition, page_index, page_size, pagination=True)
     payload = http_json_post(request["url"], request["call_params"], timeout=timeout)
     code = str(payload.get("code", "")) if payload.get("code") is not None else ""
     message = str(payload.get("msgCN") or payload.get("msgCn") or payload.get("message") or "")
     if code and code != "10000":
-        raise ApiError(message or f"高筛返回异常：{code}")
+        raise ApiError(message or f"企业搜索接口返回异常：{code}")
     data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
     rows = data.get("resultList") or []
     total = int(data.get("total") or len(rows) or 0)
@@ -79,10 +79,10 @@ def call_high_screen_preview(section: Dict[str, Any], condition: Any, page_index
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Preview high-screen enterprise candidates.")
+    parser = argparse.ArgumentParser(description="Preview candidate companies from the local enterprise search interface.")
     parser.add_argument("--config", help="Config JSON path.")
-    parser.add_argument("--filter-file", help="Condition JSON file.")
-    parser.add_argument("--filter-json", help="Condition JSON string.")
+    parser.add_argument("--filter-file", help="Enterprise-search JSON file.")
+    parser.add_argument("--filter-json", help="Enterprise-search JSON string.")
     parser.add_argument("--page-index", type=int, default=1)
     parser.add_argument("--page-size", type=int, default=20)
     parser.add_argument("--timeout", type=int, default=30)
@@ -93,11 +93,11 @@ def main() -> None:
     config, path = load_config(args.config, allow_example=args.dry_run)
     section = get_high_screen_section(config)
     page_size = min(max(args.page_size or int(section.get("default_page_size", 20)), 1), 50)
-    request = build_high_screen_request(section, condition, max(args.page_index, 1), page_size, pagination=True)
+    request = build_enterprise_search_request(section, condition, max(args.page_index, 1), page_size, pagination=True)
     if args.dry_run:
         print_json({"dry_run": True, "config_path": str(path), "request": redact(request)})
         return
-    result = call_high_screen_preview(section, condition, max(args.page_index, 1), page_size, timeout=args.timeout)
+    result = call_enterprise_search_preview(section, condition, max(args.page_index, 1), page_size, timeout=args.timeout)
     print_json(result)
 
 

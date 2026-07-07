@@ -1,123 +1,75 @@
-# industry-chain-processing-skill
+# 旷湖产业链分析 Skill
 
-面向 Codex 的本地产业链加工 Skill。它把“产业链 L1-L5 本体生成、L5 节点高筛条件构造、Handaas/高筛企业查询、企业证据核验、挂链建议输出”封装成一个可安装的 Skill 和一组本地脚本。
+一个给 Codex 使用的本地 Skill。用户只需要说“使用旷湖产业链分析，分析某个行业 / 赛道 / 企业名单”，Codex 会自动完成产业链拆解、企业线索挖掘、证据核验、挂链建议和报告生成。
 
-> 这不是 SaaS 平台，也不会托管用户数据或凭证。用户从 GitHub 安装 Skill 后，配置自己的 Handaas / high-screen 凭证，即可在本地让 Codex 使用该技能和接口脚本。
+> 这不是 SaaS 平台，也不会托管用户数据或凭证。仓库安装到本机后，只读取用户自己的本地配置和接口权限。
 
 ## 目录
 
-- [适用场景](#适用场景)
-- [最小上手流程](#最小上手流程)
+- [你可以直接怎么说](#你可以直接怎么说)
 - [一句话安装调试](#一句话安装调试)
-- [仓库结构](#仓库结构)
 - [安装到 Codex](#安装到-codex)
-- [配置 Handaas / high-screen](#配置-handaas--high-screen)
+- [配置本地企业数据接口](#配置本地企业数据接口)
 - [快速验证](#快速验证)
-- [在 Codex 中使用](#在-codex-中使用)
-- [命令行使用](#命令行使用)
-- [脚本接口说明](#脚本接口说明)
-- [输出与决策口径](#输出与决策口径)
+- [它会自动做什么](#它会自动做什么)
+- [输出结果怎么看](#输出结果怎么看)
+- [生成静态报告](#生成静态报告)
+- [高级命令行用法](#高级命令行用法)
+- [仓库结构](#仓库结构)
 - [故障排查](#故障排查)
 - [安全边界](#安全边界)
 - [开发与发布](#开发与发布)
 
-## 适用场景
+## 你可以直接怎么说
 
-使用这个 Skill 可以完成：
-
-1. **产业链本体生成**：把“低空经济 / 人形机器人 / 半导体”等主题拆成 L1-L5 产业链结构。
-2. **L5 节点企业挂链**：为“eVTOL整机制造”“飞控系统”“动力电池PACK”等 L5 节点生成高筛条件。
-3. **高筛企业召回**：调用用户本地配置的 high-screen 接口返回企业候选名单。
-4. **Handaas 证据核验**：调用工商照面、招聘、知识产权、招投标等产品，辅助判断企业是否真正匹配节点。
-5. **挂链建议输出**：把企业候选标记为 `confirmed`、`uncertain` 或 `rejected`。
-
-核心原则：
-
-- 先生成产业链本体，再做企业挂链。
-- 企业不进入 L1-L5 图谱层级。
-- L5 是企业挂链的最小目标。
-- 高筛条件必须围绕业务语义扩展，不只使用节点名称。
-- 所有凭证只保存在用户本地。
-
-## 最小上手流程
-
-如果只是安装后立即试用，按这 4 步走：
-
-```bash
-# 1. 拉取仓库。把 <your-name> 替换成实际 GitHub 账号或组织名。
-git clone https://github.com/<your-name>/industry-chain-processing-skill.git
-
-# 2. 安装 Skill 到 Codex。
-mkdir -p ~/.codex/skills
-cp -R industry-chain-processing-skill/industry-chain-processing ~/.codex/skills/
-
-# 3. 创建本地配置，并填入自己的 Handaas / high-screen 参数。
-mkdir -p ~/.industry-chain-processing
-cp ~/.codex/skills/industry-chain-processing/assets/config.example.json \
-  ~/.industry-chain-processing/handaas.config.json
-vim ~/.industry-chain-processing/handaas.config.json
-
-# 4. 验证配置结构。
-python ~/.codex/skills/industry-chain-processing/scripts/validate_config.py
-```
-
-验证通过后，在 Codex 中直接说：
+安装完成后，不需要记内部包名，也不需要输入专业接口术语。直接在 Codex 里说：
 
 ```text
-使用旷湖产业链分析，为“低空经济 > 航空器制造 > eVTOL整机制造”查询候选企业，先 dry-run。
+使用旷湖产业链分析，分析低空经济产业链，输出重点环节、企业类型和招商线索。
 ```
+
+更多例子：
+
+```text
+使用旷湖产业链分析，帮我找一批 eVTOL 整机制造相关企业，先模拟运行。
+```
+
+```text
+使用旷湖产业链分析，围绕人形机器人产业链做企业线索挖掘，输出确认、待复核、剔除三类结果。
+```
+
+```text
+使用旷湖产业链分析，判断下面这些企业分别适合挂到低空经济产业链的哪些细分环节：
+1. xxx 公司
+2. yyy 公司
+```
+
+```text
+使用旷湖产业链分析，分析半导体设备产业链，先不要真实调用接口，只给我产业链结构和企业搜索策略。
+```
+
+你不需要理解内部层级、接口字段、数据产品或搜索参数；这些都由 Skill 在内部完成。
 
 ## 一句话安装调试
 
-给普通用户最省事的方式：把下面这段话复制到自己的 AI 编程工具里，例如 Codex，让工具自动完成克隆、安装、配置文件创建和 dry-run 验证。
+给普通用户最省事的方式：复制下面这段话到自己的 AI 编程工具里，例如 Codex，让它自动完成安装和验证。
 
 ```text
-请帮我安装并调试 GitHub 仓库 https://github.com/sunjackson/industry-chain-processing-skill 的 Codex Skill：克隆仓库，把 industry-chain-processing/ 安装到 ~/.codex/skills/industry-chain-processing，复制 assets/config.example.json 到 ~/.industry-chain-processing/handaas.config.json，提醒我填入自己的 Handaas/high-screen 参数且不要提交凭证，然后运行 quick_validate、py_compile、validate_config --allow-placeholders 和 link_enterprises --dry-run 验证；安装完成后，我希望直接用“使用旷湖产业链分析，完成...”来调用。
+请帮我安装并调试“旷湖产业链分析”Codex Skill：从 https://github.com/sunjackson/industry-chain-processing-skill 克隆仓库，安装到本机 Codex 的 skills 目录，创建本地企业数据接口配置文件，提醒我填入自己的接口参数且不要提交凭证，然后运行仓库内置校验、模拟分析验证和示例 HTML 报告生成；安装完成后，我希望直接用“使用旷湖产业链分析，...”来调用。
 ```
 
-如果仓库是私有仓库，或用户只配置了 GitHub SSH 权限，可以把上面的仓库地址替换成：
+如果你使用 SSH 拉取仓库，也可以把地址换成：
 
 ```text
 git@github.com:sunjackson/industry-chain-processing-skill.git
 ```
 
-> `industry-chain-processing` 是内部 Skill 包名；用户日常不需要记这个名字，直接说“使用旷湖产业链分析...”即可。
-
-## 仓库结构
-
-```text
-industry-chain-processing-skill/
-├── README.md
-├── LICENSE
-├── .gitignore
-└── industry-chain-processing/
-    ├── SKILL.md
-    ├── agents/openai.yaml
-    ├── assets/config.example.json
-    ├── references/
-    │   ├── ontology-contract.md
-    │   ├── handaas-config.md
-    │   ├── high-screen-condition-rules.md
-    │   └── evidence-scoring.md
-    └── scripts/
-        ├── common.py
-        ├── validate_config.py
-        ├── build_condition.py
-        ├── high_screen_preview.py
-        ├── handaas_call.py
-        └── link_enterprises.py
-```
-
-运行脚本只依赖 Python 标准库，建议 Python 3.10+。
-
 ## 安装到 Codex
-
-下面示例中的 `<your-name>` 需要替换成你实际提交到 GitHub 的账号或组织名。
 
 ### 方式一：复制安装
 
 ```bash
-git clone https://github.com/<your-name>/industry-chain-processing-skill.git
+git clone https://github.com/sunjackson/industry-chain-processing-skill.git
 mkdir -p ~/.codex/skills
 cp -R industry-chain-processing-skill/industry-chain-processing ~/.codex/skills/
 ```
@@ -134,7 +86,7 @@ cp -R industry-chain-processing ~/.codex/skills/
 ### 方式二：软链接安装，推荐给开发者
 
 ```bash
-git clone https://github.com/<your-name>/industry-chain-processing-skill.git
+git clone https://github.com/sunjackson/industry-chain-processing-skill.git
 mkdir -p ~/.codex/skills
 ln -sfn "$(pwd)/industry-chain-processing-skill/industry-chain-processing" \
   ~/.codex/skills/industry-chain-processing
@@ -142,23 +94,18 @@ ln -sfn "$(pwd)/industry-chain-processing-skill/industry-chain-processing" \
 
 安装后重启 Codex，或在支持热加载的客户端中刷新 Skill 列表。
 
-## 配置 Handaas / high-screen
+## 配置本地企业数据接口
 
-创建本地配置文件：
+如果只做产业链分析和模拟运行，可以先不填真实接口参数。若要真实查询企业，需要创建本地配置文件：
 
 ```bash
 mkdir -p ~/.industry-chain-processing
 cp ~/.codex/skills/industry-chain-processing/assets/config.example.json \
   ~/.industry-chain-processing/handaas.config.json
-```
-
-编辑：
-
-```bash
 vim ~/.industry-chain-processing/handaas.config.json
 ```
 
-配置结构：
+配置文件示例：
 
 ```json
 {
@@ -177,7 +124,7 @@ vim ~/.industry-chain-processing/handaas.config.json
     }
   },
   "high_screen": {
-    "url": "https://example.com/high-screen-endpoint",
+    "url": "https://example.com/enterprise-search-endpoint",
     "product_id": "your_high_screen_product_id",
     "secret_id": "your_high_screen_secret_id",
     "secret_key": "your_high_screen_secret_key",
@@ -192,7 +139,7 @@ vim ~/.industry-chain-processing/handaas.config.json
 2. 环境变量 `INDUSTRY_CHAIN_CONFIG`
 3. 环境变量 `HANDAAS_CONFIG`
 4. 默认路径 `~/.industry-chain-processing/handaas.config.json`
-5. `assets/config.example.json`，仅用于 `--dry-run` 示例
+5. 示例配置，仅用于模拟运行
 
 可选环境变量：
 
@@ -210,7 +157,7 @@ export HANDAAS_CONFIG=~/.industry-chain-processing/handaas.config.json
 python ~/.codex/skills/industry-chain-processing/scripts/validate_config.py
 ```
 
-验证示例配置，不要求真实凭证：
+只验证示例配置，不要求真实凭证：
 
 ```bash
 python ~/.codex/skills/industry-chain-processing/scripts/validate_config.py \
@@ -230,172 +177,140 @@ python ~/.codex/skills/industry-chain-processing/scripts/validate_config.py \
 
 如果 `ok` 为 `false`，先按 `errors` 修复配置。
 
-## 在 Codex 中使用
+## 它会自动做什么
 
-安装后，可以直接让 Codex 使用该 Skill。推荐用户侧调用话术是“使用旷湖产业链分析...”，不需要输入内部包名 `industry-chain-processing`。
+当用户说“使用旷湖产业链分析...”时，Skill 会在内部完成以下步骤：
 
-### 示例 1：生成产业链本体
+1. **理解目标**：判断用户要做产业链研究、企业线索挖掘、企业归位、招商筛选，还是证据核验。
+2. **拆解产业链**：把行业主题拆成“产业主题 -> 价值环节 -> 细分模块 -> 可匹配企业的产品 / 技术 / 服务 / 能力”。
+3. **选择分析重点**：自动挑出最适合找企业、招商或核验的细分环节。
+4. **生成搜索策略**：自动扩展业务词、同义词、场景词、岗位词、专利词、招投标词和排除词。
+5. **查询企业线索**：如果本地接口配置可用，查询候选企业；如果没有配置，则输出模拟请求和后续配置提示。
+6. **核验证据**：结合工商、招聘、知识产权、招投标等证据判断企业是否真的匹配。
+7. **输出建议**：给出确认、待复核、剔除，以及下一步补充关键词或排除噪声的建议。
+8. **生成报告**：用户需要交付或展示时，可直接生成离线 HTML 或 Markdown 报告。
+
+默认原则：
+
+- 用户只需要给行业、赛道、企业名单或业务目标。
+- 不要求用户提供内部层级、接口字段、数据产品或搜索参数。
+- 真实接口可能产生费用；不确定时先模拟运行。
+- 企业只作为候选结果，不混入产业链结构。
+
+## 输出结果怎么看
+
+常见输出包括：
+
+| 字段 | 含义 |
+| --- | --- |
+| `industry_map` | 产业链结构和重点细分环节 |
+| `search_strategy` | 企业搜索思路，默认用自然语言解释 |
+| `candidates` | 候选企业样本和数量 |
+| `evidence` | 工商、招聘、专利、招投标等证据摘要 |
+| `decision` | `confirmed`、`uncertain`、`rejected` |
+| `next_actions` | 后续建议，例如补充排除词、人工复核、真实接口查询 |
+
+决策含义：
+
+| decision | 含义 | 建议动作 |
+| --- | --- | --- |
+| `confirmed` | 有较强证据表明企业匹配该细分环节 | 可确认挂链 |
+| `uncertain` | 有相关迹象但证据不足或边界不清 | 人工复核 |
+| `rejected` | 明显不相关或被噪声召回 | 剔除并补充排除词 |
+
+
+## 生成静态报告
+
+可以。Skill 默认在 Codex 对话里用结构化摘要和表格展示；如果你要发给同事、客户或沉淀为材料，可以让 Codex 直接生成报告：
 
 ```text
-使用旷湖产业链分析，帮我生成“低空经济”产业链 L1-L5 本体，企业不要放进图谱层级。
+使用旷湖产业链分析，分析低空经济产业链，并生成一个可离线打开的 HTML 报告。
 ```
-
-期望 Codex 输出：
-
-- L1 产业链域
-- L2 价值环节
-- L3 产业环节
-- L5 产品 / 技术 / 服务节点
-- L5 可挂链性说明
-
-### 示例 2：为单个 L5 节点构造高筛条件
 
 ```text
-使用旷湖产业链分析，为“低空经济 > 航空器制造 > eVTOL整机制造”构造 high-screen 条件组，先 dry-run，不真实调用接口。
+使用旷湖产业链分析，基于刚才的企业线索结果，生成 Markdown 报告。
 ```
 
-Codex 应优先调用：
+内置报告能力：
+
+| 形式 | 适用场景 | 特点 |
+| --- | --- | --- |
+| 对话表格 | 快速查看结果 | 直接在 Codex 中阅读，适合迭代分析 |
+| 静态 HTML | 对外展示、发给同事、沉淀材料 | 单文件、可离线打开、带样式和汇总卡片 |
+| Markdown | 放入知识库、Wiki、PRD 或二次编辑 | 易复制、易版本管理 |
+| JSON | 系统对接或二次加工 | 保留结构化字段，适合继续处理 |
+
+高级用户也可以直接使用脚本生成报告：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/build_condition.py \
-  --chain "低空经济" \
-  --node "eVTOL整机制造" \
-  --path "低空经济产业链>航空器制造>eVTOL整机制造"
+python ~/.codex/skills/industry-chain-processing/scripts/render_report.py \
+  --input ~/.codex/skills/industry-chain-processing/assets/report.example.json \
+  --output /tmp/industry-report.html
 ```
 
-### 示例 3：调用高筛接口找企业
+生成 Markdown：
 
-```text
-使用旷湖产业链分析，调用我的本地 high-screen 配置，为“eVTOL整机制造”查询前 10 个候选企业。
+```bash
+python ~/.codex/skills/industry-chain-processing/scripts/render_report.py \
+  --input ~/.codex/skills/industry-chain-processing/assets/report.example.json \
+  --output /tmp/industry-report.md
 ```
 
-Codex 应先运行 `validate_config.py` 检查配置可用，然后执行 high-screen 查询。若你还没有确认要真实调用，可以要求：
+## 高级命令行用法
 
-```text
-先 dry-run，只检查请求结构。
+一般用户不需要使用本节。下面命令主要用于开发、调试或排查接口问题。
+
+### 1. 配置校验
+
+```bash
+python ~/.codex/skills/industry-chain-processing/scripts/validate_config.py
 ```
 
-### 示例 4：带 Handaas 证据核验
-
-```text
-使用旷湖产业链分析，为“eVTOL整机制造”查询候选企业，并用工商照面、招聘明细、知识产权统计、企业招投标信息做证据核验，输出 confirmed / uncertain / rejected。
-```
-
-注意：带 `--with-evidence` 会调用多个 Handaas 产品，可能产生接口费用。
-
-## 命令行使用
-
-下面命令可不经过 Codex，直接作为本地接口脚本使用。
-
-### 1. 生成 L5 节点高筛条件
+### 2. 生成企业搜索策略
 
 ```bash
 python ~/.codex/skills/industry-chain-processing/scripts/build_condition.py \
   --chain "低空经济" \
   --node "eVTOL整机制造" \
   --path "低空经济产业链>航空器制造>eVTOL整机制造" \
-  --output /tmp/evtol-condition.json
+  --output /tmp/evtol-search.json
 ```
 
-追加业务词：
+追加业务词、行业边界和排除词：
 
 ```bash
 python ~/.codex/skills/industry-chain-processing/scripts/build_condition.py \
   --chain "低空经济" \
   --node "eVTOL整机制造" \
-  --path "低空经济产业链>航空器制造>eVTOL整机制造" \
   --keyword "适航认证" \
   --keyword "飞行器总装" \
-  --exclude "航空培训" \
-  --output /tmp/evtol-condition.json
-```
-
-追加行业边界：
-
-```bash
-python ~/.codex/skills/industry-chain-processing/scripts/build_condition.py \
-  --chain "低空经济" \
-  --node "eVTOL整机制造" \
   --industry "制造业/铁路、船舶、航空航天和其他运输设备制造业" \
-  --output /tmp/evtol-condition.json
+  --exclude "航空培训" \
+  --output /tmp/evtol-search.json
 ```
 
-### 2. 高筛 dry-run
+### 3. 模拟查询企业
 
-只检查签名和请求形态，不调用网络：
+只检查请求结构，不调用网络：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/high_screen_preview.py \
-  --filter-file /tmp/evtol-condition.json \
+python ~/.codex/skills/industry-chain-processing/scripts/enterprise_search_preview.py \
+  --filter-file /tmp/evtol-search.json \
   --dry-run
 ```
 
-### 3. 高筛真实查询
+### 4. 真实查询企业
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/high_screen_preview.py \
-  --filter-file /tmp/evtol-condition.json \
+python ~/.codex/skills/industry-chain-processing/scripts/enterprise_search_preview.py \
+  --filter-file /tmp/evtol-search.json \
   --page-index 1 \
   --page-size 10
 ```
 
-输出包含：
+### 5. 单个细分环节端到端分析
 
-```json
-{
-  "total": 123,
-  "pageIndex": 1,
-  "pageSize": 10,
-  "samples": [
-    {
-      "id": "企业ID",
-      "name": "企业名称",
-      "socialCreditCode": "统一社会信用代码",
-      "regCapital": "注册资本"
-    }
-  ]
-}
-```
-
-### 4. Handaas dry-run
-
-```bash
-python ~/.codex/skills/industry-chain-processing/scripts/handaas_call.py \
-  --product 工商照面 \
-  --keyword "test-enterprise-id" \
-  --key-type nameId \
-  --dry-run
-```
-
-### 5. Handaas 真实调用
-
-```bash
-python ~/.codex/skills/industry-chain-processing/scripts/handaas_call.py \
-  --product 工商照面 \
-  --keyword "<企业ID>" \
-  --key-type nameId
-```
-
-使用企业名称查询：
-
-```bash
-python ~/.codex/skills/industry-chain-processing/scripts/handaas_call.py \
-  --product 工商照面 \
-  --keyword "某某科技有限公司" \
-  --key-type name
-```
-
-分页产品示例：
-
-```bash
-python ~/.codex/skills/industry-chain-processing/scripts/handaas_call.py \
-  --product 招聘明细 \
-  --keyword "<企业ID>" \
-  --key-type nameId \
-  --extra-json '{"pageIndex":1,"pageSize":5}'
-```
-
-### 6. 单节点企业挂链 dry-run
+模拟运行：
 
 ```bash
 python ~/.codex/skills/industry-chain-processing/scripts/link_enterprises.py \
@@ -405,9 +320,7 @@ python ~/.codex/skills/industry-chain-processing/scripts/link_enterprises.py \
   --dry-run
 ```
 
-### 7. 单节点企业挂链真实查询
-
-只调 high-screen，不调 Handaas 证据：
+真实查询候选企业：
 
 ```bash
 python ~/.codex/skills/industry-chain-processing/scripts/link_enterprises.py \
@@ -417,7 +330,7 @@ python ~/.codex/skills/industry-chain-processing/scripts/link_enterprises.py \
   --page-size 10
 ```
 
-同时做 Handaas 证据核验：
+同时做证据核验：
 
 ```bash
 python ~/.codex/skills/industry-chain-processing/scripts/link_enterprises.py \
@@ -428,112 +341,39 @@ python ~/.codex/skills/industry-chain-processing/scripts/link_enterprises.py \
   --with-evidence
 ```
 
-限制证据产品：
+## 仓库结构
 
-```bash
-python ~/.codex/skills/industry-chain-processing/scripts/link_enterprises.py \
-  --chain "低空经济" \
-  --node "eVTOL整机制造" \
-  --with-evidence \
-  --evidence-product 工商照面 \
-  --evidence-product 招聘明细
+```text
+industry-chain-processing-skill/
+├── README.md
+├── LICENSE
+├── .gitignore
+└── industry-chain-processing/
+    ├── SKILL.md
+    ├── agents/openai.yaml
+    ├── assets/config.example.json
+    ├── assets/report.example.json
+    ├── references/
+    │   ├── analysis-playbook.md
+    │   ├── ontology-contract.md
+    │   ├── local-enterprise-config.md
+    │   ├── enterprise-search-rules.md
+    │   └── evidence-scoring.md
+    └── scripts/
+        ├── common.py
+        ├── validate_config.py
+        ├── build_condition.py
+        ├── enterprise_search_preview.py
+        ├── evidence_call.py
+        ├── link_enterprises.py
+        └── render_report.py
 ```
 
-## 脚本接口说明
-
-### `validate_config.py`
-
-用途：检查配置结构，不泄露凭证。
-
-常用参数：
-
-| 参数 | 说明 |
-| --- | --- |
-| `--config` | 指定配置文件路径 |
-| `--allow-placeholders` | 允许示例占位值通过校验 |
-
-### `build_condition.py`
-
-用途：为 L5 节点构造 high-screen 条件组。
-
-常用参数：
-
-| 参数 | 必填 | 说明 |
-| --- | --- | --- |
-| `--chain` | 是 | 产业链名称 |
-| `--node` | 是 | L5 节点名称 |
-| `--path` | 否 | 完整节点路径，用 `>` 或 `/` 分隔 |
-| `--keyword` | 否 | 追加业务关键词，可重复 |
-| `--industry` | 否 | 追加高筛行业路径，可重复 |
-| `--exclude` | 否 | 追加排除词，可重复 |
-| `--output` | 否 | 写入条件 JSON 文件 |
-
-### `high_screen_preview.py`
-
-用途：调用 high-screen 查询企业候选。
-
-常用参数：
-
-| 参数 | 说明 |
-| --- | --- |
-| `--filter-file` | 条件 JSON 文件 |
-| `--filter-json` | 条件 JSON 字符串 |
-| `--page-index` | 页码，默认 1 |
-| `--page-size` | 每页数量，1-50 |
-| `--dry-run` | 只输出脱敏请求，不调用网络 |
-
-### `handaas_call.py`
-
-用途：调用 Handaas 数据产品。
-
-常用参数：
-
-| 参数 | 说明 |
-| --- | --- |
-| `--product` | 配置中的产品名，如 `工商照面` |
-| `--keyword` | 企业 ID、企业名、统一社会信用代码等 |
-| `--key-type` | `nameId`、`name`、`socialCreditCode`、`regNumber` |
-| `--extra-json` | 额外请求参数 JSON |
-| `--dry-run` | 只输出脱敏请求，不调用网络 |
-
-### `link_enterprises.py`
-
-用途：单个 L5 节点端到端企业挂链。
-
-常用参数：
-
-| 参数 | 说明 |
-| --- | --- |
-| `--chain` | 产业链名称 |
-| `--node` | L5 节点名称 |
-| `--path` | 完整节点路径 |
-| `--condition-file` | 使用已有条件 JSON |
-| `--page-size` | 高筛候选数量 |
-| `--with-evidence` | 对候选企业调用 Handaas 证据产品 |
-| `--evidence-product` | 限定证据产品，可重复 |
-| `--dry-run` | 只输出条件和脱敏请求 |
-
-## 输出与决策口径
-
-企业挂链输出中的 `decision`：
-
-| decision | 含义 | 建议动作 |
-| --- | --- | --- |
-| `confirmed` | 有招聘、专利、招投标等强证据命中 L5 节点 | 可确认挂链 |
-| `uncertain` | 只有中弱证据，或高筛召回但证据不足 | 人工复核 |
-| `rejected` | 明显不相关或只有弱证据且业务冲突 | 剔除并补充排除词 |
-
-证据强度：
-
-| 强度 | 典型来源 |
-| --- | --- |
-| strong | 招聘岗位/描述、专利名称、招投标标题/标的、工厂/资质/产品认证 |
-| medium | 经营范围、企业简介、业务关键词、国标行业、年报主营 |
-| weak | 企业名称、注册资本、联系方式、地区、经营状态 |
+运行脚本只依赖 Python 标准库，建议 Python 3.10+。
 
 ## 故障排查
 
-### 1. `未找到配置文件`
+### 1. 找不到配置文件
 
 创建默认配置：
 
@@ -549,54 +389,21 @@ cp ~/.codex/skills/industry-chain-processing/assets/config.example.json \
 python scripts/validate_config.py --config /path/to/handaas.config.json
 ```
 
-### 2. `仍是占位值`
+### 2. 仍是占位值
 
-说明配置中还有 `your_...` 或 `product_id_for_...`。真实调用前必须替换成自己的 Handaas / high-screen 参数。
+说明配置中还有 `your_...` 或 `product_id_for_...`。真实查询前必须替换成自己的接口参数。
 
-### 3. high-screen 返回参数错误或 2007
+### 3. 查询太宽或噪声太多
 
-建议：
+让 Codex 补充更具体的业务词和排除词：
 
-1. 先使用 `--dry-run` 检查请求结构。
-2. 确认传给接口的是条件组对象，不要包裹 `condition` / `filter` / `data` / `query`。
-3. 减少复杂嵌套，先用基础 `must` + 一个业务 `should` + 少量 `must_not`。
-4. 检查字段名和操作符是否被当前 high-screen 产品支持。
-
-### 4. 高筛命中太宽
-
-增加：
-
-- `--industry` 行业路径
-- `--exclude` 排除词
-- 更具体的 `--keyword`
-
-示例：
-
-```bash
-python scripts/build_condition.py \
-  --chain "低空经济" \
-  --node "eVTOL整机制造" \
-  --industry "制造业/铁路、船舶、航空航天和其他运输设备制造业" \
-  --exclude "航空培训" \
-  --exclude "旅游观光"
+```text
+使用旷湖产业链分析，刚才结果里培训、维修和旅游观光企业太多，请补充排除词后重新模拟运行。
 ```
 
-### 5. Handaas 产品找不到
+### 4. 真实接口调用超时
 
-检查配置中的产品名是否与命令一致：
-
-```json
-"products": {
-  "工商照面": "...",
-  "招聘明细": "..."
-}
-```
-
-命令中的 `--product` 必须使用这些 key。
-
-### 6. 真实接口调用超时
-
-降低 `--page-size`，或只先运行 high-screen，不带 `--with-evidence`：
+先降低返回数量，或先只做模拟运行：
 
 ```bash
 python scripts/link_enterprises.py \
@@ -607,11 +414,11 @@ python scripts/link_enterprises.py \
 
 ## 安全边界
 
-- 不提交真实 `handaas.config.json`。
+- 不提交真实配置文件。
 - 不在 Git、日志、Issue、截图中暴露 `secret_id`、`secret_key`、signature、token。
-- `--dry-run` 输出会脱敏敏感字段。
+- 模拟运行会脱敏敏感字段。
 - 本仓库不托管用户数据，不保存调用结果。
-- 带 `--with-evidence` 的命令会调用多个 Handaas 产品，可能产生接口费用。
+- 真实接口调用可能产生费用；不确定时先模拟运行。
 
 ## 开发与发布
 
@@ -628,14 +435,14 @@ python3 scripts/link_enterprises.py \
   --node "eVTOL整机制造" \
   --path "低空经济产业链>航空器制造>eVTOL整机制造" \
   --dry-run
+python3 scripts/render_report.py --input assets/report.example.json --output /tmp/industry-report.html
 ```
 
-首次推送到 GitHub：
+推送到 GitHub：
 
 ```bash
 cd /Users/sunjackson/Project/industry-chain-processing-skill
-git remote add origin git@github.com:<your-name>/industry-chain-processing-skill.git
-git push -u origin main
+git push
 ```
 
 发布前检查：

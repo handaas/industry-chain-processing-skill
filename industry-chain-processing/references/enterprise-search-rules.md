@@ -1,4 +1,4 @@
-# High-Screen Condition Rules
+# Internal Enterprise Search Rules
 
 ## Base condition
 
@@ -17,7 +17,7 @@ Do not add registered capital, phone, mobile, or contact constraints by default.
 
 ## Evidence groups
 
-Build at least one business evidence `should` group across:
+Internally build at least one business evidence `should` group across:
 
 - `businessKeywords`
 - `business`
@@ -47,7 +47,7 @@ Use the full node path. Expand:
 
 Avoid standalone generic terms: `平台`, `系统`, `服务`, `软件`, `解决方案`, `上游`, `中游`, `下游`, `产业链`.
 
-## Review failures
+## Review failures internally
 
 - Zero recall: expand synonyms and broader business phrases.
 - Over-broad recall: add industry boundary, stronger evidence, and must-not noise.

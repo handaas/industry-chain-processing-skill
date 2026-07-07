@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""End-to-end local enterprise linking helper for one L5 node."""
+"""End-to-end local enterprise matching helper for one refined industry segment."""
 from __future__ import annotations
 
 import argparse
@@ -8,8 +8,8 @@ from typing import Any, Dict, List, Sequence
 
 from build_condition import build_condition_group, parse_path
 from common import ApiError, get_handaas_section, get_high_screen_section, load_config, print_json, redact
-from handaas_call import call_handaas
-from high_screen_preview import build_high_screen_request, call_high_screen_preview
+from evidence_call import call_handaas
+from enterprise_search_preview import build_enterprise_search_request, call_enterprise_search_preview
 
 DEFAULT_EVIDENCE_PRODUCTS = ["工商照面", "招聘明细", "知识产权统计", "企业招投标信息"]
 
@@ -39,20 +39,20 @@ def classify_candidate(company: Dict[str, Any], evidence: Dict[str, Any], node: 
         reason = f"中证据命中：{'、'.join(sorted(set(medium_hits))[:6])}"
     else:
         decision, strength, action = "uncertain", "weak", "manual review"
-        reason = "候选来自高筛召回，但尚未采集到明确强证据"
+        reason = "候选来自企业搜索召回，但尚未采集到明确强证据"
     return {
         "enterprise_name": company.get("name"),
         "enterprise_id": company.get("id"),
         "decision": decision,
         "evidence_strength": strength,
-        "matched_node": node,
+        "matched_segment": node,
         "reason": reason,
         "next_action": action,
     }
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Link enterprises for one L5 node using local high-screen/Handaas config.")
+    parser = argparse.ArgumentParser(description="Match enterprises for one refined industry segment using local enterprise data config.")
     parser.add_argument("--config", help="Config JSON path.")
     parser.add_argument("--chain", required=True)
     parser.add_argument("--node", required=True)
@@ -62,7 +62,7 @@ def main() -> None:
     parser.add_argument("--industry", action="append", default=[])
     parser.add_argument("--exclude", action="append", default=[])
     parser.add_argument("--page-size", type=int, default=10)
-    parser.add_argument("--with-evidence", action="store_true", help="Call Handaas evidence products for sample companies.")
+    parser.add_argument("--with-evidence", action="store_true", help="Call configured evidence products for sample companies.")
     parser.add_argument("--evidence-product", action="append", default=[], help="Evidence product name. Repeatable.")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
@@ -79,7 +79,7 @@ def main() -> None:
     page_size = min(max(args.page_size, 1), 50)
 
     if args.dry_run:
-        request = build_high_screen_request(high_screen, condition, 1, page_size, pagination=True)
+        request = build_enterprise_search_request(high_screen, condition, 1, page_size, pagination=True)
         print_json({
             "dry_run": True,
             "config_path": str(config_path),
@@ -87,13 +87,13 @@ def main() -> None:
             "node": args.node,
             "path": path,
             "condition": condition,
-            "high_screen_request": redact(request),
+            "enterprise_search_request": redact(request),
             "evidence_products": args.evidence_product or DEFAULT_EVIDENCE_PRODUCTS,
             "note": "dry-run 未调用网络；填入真实配置后去掉 --dry-run。",
         })
         return
 
-    preview = call_high_screen_preview(high_screen, condition, 1, page_size)
+    preview = call_enterprise_search_preview(high_screen, condition, 1, page_size)
     candidates = preview.get("samples", [])
     decisions = []
     evidence_results: Dict[str, Dict[str, Any]] = {}
@@ -126,8 +126,8 @@ def main() -> None:
         "evidence": evidence_results,
         "next_actions": [
             "抽查 confirmed/uncertain 企业证据",
-            "对跑偏样本补充 must_not 排除词",
-            "对高价值节点启用 --with-evidence 做 Handaas 二次核验",
+            "对跑偏样本补充排除词",
+            "对高价值细分环节启用 --with-evidence 做二次证据核验",
         ],
     })
 
