@@ -1,6 +1,6 @@
 # 旷湖产业链分析 Skill
 
-一个给 Codex 使用的本地 Skill。用户只需要说“使用旷湖产业链分析，分析某个行业 / 赛道 / 企业名单”，Codex 会自动完成产业链拆解、企业线索挖掘、证据核验、挂链建议和报告生成。
+一个可被本地智能体使用的产业链分析 Skill / 工具包。用户只需要说“使用旷湖产业链分析，分析某个行业 / 赛道 / 企业名单”，智能体会自动完成产业链拆解、企业线索挖掘、证据核验、挂链建议和报告生成。
 
 > 这不是 SaaS 平台，也不会托管用户数据或凭证。仓库安装到本机后，只读取用户自己的本地配置和接口权限。
 
@@ -8,7 +8,7 @@
 
 - [你可以直接怎么说](#你可以直接怎么说)
 - [一句话安装调试](#一句话安装调试)
-- [安装到 Codex](#安装到-codex)
+- [安装到本地智能体](#安装到本地智能体)
 - [配置本地企业数据接口](#配置本地企业数据接口)
 - [快速验证](#快速验证)
 - [它会自动做什么](#它会自动做什么)
@@ -22,7 +22,7 @@
 
 ## 你可以直接怎么说
 
-安装完成后，不需要记内部包名，也不需要输入专业接口术语。直接在 Codex 里说：
+安装完成后，不需要记内部包名，也不需要输入专业接口术语。直接在你的智能体工具里说：
 
 ```text
 使用旷湖产业链分析，分析低空经济产业链，输出重点环节、企业类型和招商线索。
@@ -52,10 +52,10 @@
 
 ## 一句话安装调试
 
-给普通用户最省事的方式：复制下面这段话到自己的 AI 编程工具里，例如 Codex，让它自动完成安装和验证。
+给普通用户最省事的方式：复制下面这段话到任意支持 Git / Shell / Python 的智能体工具里。Codex 只是例子，Claude Code、Gemini CLI、Cursor、Windsurf、Cline、OpenHands 等智能体也可以按同一段指令执行。
 
 ```text
-请帮我安装并调试“旷湖产业链分析”Codex Skill：从 https://github.com/sunjackson/industry-chain-processing-skill 克隆仓库，安装到本机 Codex 的 skills 目录，创建本地企业数据接口配置文件，提醒我填入自己的接口参数且不要提交凭证，然后运行仓库内置校验、模拟分析验证和示例 HTML 报告生成；安装完成后，我希望直接用“使用旷湖产业链分析，...”来调用。
+请帮我安装并调试“旷湖产业链分析”：先完整读取 https://github.com/sunjackson/industry-chain-processing-skill 这个项目的 README.md，再克隆仓库并按 README 自动完成安装、配置文件创建、校验、模拟分析验证和示例 HTML 报告生成。若当前工具支持 Codex-compatible Skill，就把 industry-chain-processing/ 安装到对应 skills 目录；若不支持，就把该仓库作为本地工具包使用，并记住后续通过仓库脚本和 README 工作流来完成“使用旷湖产业链分析，...”类请求。请提醒我只在本地配置自己的企业数据接口参数，不要提交凭证；除非需要真实接口密钥，否则不要中断询问。
 ```
 
 如果你使用 SSH 拉取仓库，也可以把地址换成：
@@ -64,9 +64,35 @@
 git@github.com:sunjackson/industry-chain-processing-skill.git
 ```
 
-## 安装到 Codex
+智能体读取 README 后应自动完成：
 
-### 方式一：复制安装
+1. 克隆仓库。
+2. 判断当前工具是否支持 Skill 目录安装。
+3. 支持 Skill 时安装 `industry-chain-processing/`；不支持时保留仓库作为本地工具包。
+4. 创建 `~/.industry-chain-processing/handaas.config.json`。
+5. 提醒用户填入自己的本地接口参数，并避免提交凭证。
+6. 运行校验、模拟分析和示例报告生成。
+7. 告诉用户后续如何在当前智能体里说“使用旷湖产业链分析，...”。
+
+## 安装到本地智能体
+
+### 通用安装逻辑
+
+```bash
+git clone https://github.com/sunjackson/industry-chain-processing-skill.git
+cd industry-chain-processing-skill
+```
+
+如果你的智能体支持 Codex-compatible Skill 目录，例如 `~/.codex/skills`，安装 Skill 包：
+
+```bash
+mkdir -p ~/.codex/skills
+cp -R industry-chain-processing ~/.codex/skills/
+```
+
+如果你的智能体没有 Skill 目录，也可以直接把仓库作为本地工具包使用：让智能体读取本 README、`industry-chain-processing/SKILL.md` 和 `industry-chain-processing/references/`，并调用 `industry-chain-processing/scripts/` 下的脚本。
+
+### Codex 复制安装
 
 ```bash
 git clone https://github.com/sunjackson/industry-chain-processing-skill.git
@@ -83,7 +109,7 @@ rm -rf ~/.codex/skills/industry-chain-processing
 cp -R industry-chain-processing ~/.codex/skills/
 ```
 
-### 方式二：软链接安装，推荐给开发者
+### Codex 软链接安装，推荐给开发者
 
 ```bash
 git clone https://github.com/sunjackson/industry-chain-processing-skill.git
@@ -92,7 +118,7 @@ ln -sfn "$(pwd)/industry-chain-processing-skill/industry-chain-processing" \
   ~/.codex/skills/industry-chain-processing
 ```
 
-安装后重启 Codex，或在支持热加载的客户端中刷新 Skill 列表。
+安装后重启对应智能体，或在支持热加载的客户端中刷新 Skill / 工具列表。
 
 ## 配置本地企业数据接口
 
@@ -103,6 +129,12 @@ mkdir -p ~/.industry-chain-processing
 cp ~/.codex/skills/industry-chain-processing/assets/config.example.json \
   ~/.industry-chain-processing/handaas.config.json
 vim ~/.industry-chain-processing/handaas.config.json
+```
+
+如果不是安装在 `~/.codex/skills`，把上面的源路径替换为仓库中的：
+
+```bash
+industry-chain-processing/assets/config.example.json
 ```
 
 配置文件示例：
@@ -221,7 +253,7 @@ python ~/.codex/skills/industry-chain-processing/scripts/validate_config.py \
 
 ## 生成静态报告
 
-可以。Skill 默认在 Codex 对话里用结构化摘要和表格展示；如果你要发给同事、客户或沉淀为材料，可以让 Codex 直接生成报告：
+可以。Skill 默认在智能体对话里用结构化摘要和表格展示；如果你要发给同事、客户或沉淀为材料，可以让智能体直接生成报告：
 
 ```text
 使用旷湖产业链分析，分析低空经济产业链，并生成一个可离线打开的 HTML 报告。
@@ -235,7 +267,7 @@ python ~/.codex/skills/industry-chain-processing/scripts/validate_config.py \
 
 | 形式 | 适用场景 | 特点 |
 | --- | --- | --- |
-| 对话表格 | 快速查看结果 | 直接在 Codex 中阅读，适合迭代分析 |
+| 对话表格 | 快速查看结果 | 直接在智能体对话中阅读，适合迭代分析 |
 | 静态 HTML | 对外展示、发给同事、沉淀材料 | 单文件、可离线打开、带样式和汇总卡片 |
 | Markdown | 放入知识库、Wiki、PRD 或二次编辑 | 易复制、易版本管理 |
 | JSON | 系统对接或二次加工 | 保留结构化字段，适合继续处理 |
@@ -395,7 +427,7 @@ python scripts/validate_config.py --config /path/to/handaas.config.json
 
 ### 3. 查询太宽或噪声太多
 
-让 Codex 补充更具体的业务词和排除词：
+让智能体补充更具体的业务词和排除词：
 
 ```text
 使用旷湖产业链分析，刚才结果里培训、维修和旅游观光企业太多，请补充排除词后重新模拟运行。
