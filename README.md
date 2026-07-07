@@ -147,23 +147,31 @@ industry-chain-processing/assets/config.example.json
     "secret_id": "your_secret_id",
     "secret_key": "your_secret_key",
     "products": {
-      "工商照面": "product_id_for_business_profile",
-      "工商年报": "product_id_for_annual_report",
-      "招聘统计": "product_id_for_recruiting_stats",
-      "招聘明细": "product_id_for_recruiting_detail",
-      "知识产权统计": "product_id_for_ip_stats",
-      "企业招投标信息": "product_id_for_bidding"
+      "工商照面": {"product_id": "your_real_product_id_for_business_profile"},
+      "工商年报": {"product_id": "your_real_product_id_for_annual_report"},
+      "招聘统计": {"product_id": "your_real_product_id_for_recruiting_stats"},
+      "招聘明细": {"product_id": "your_real_product_id_for_recruiting_detail"},
+      "知识产权统计": {"product_id": "your_real_product_id_for_ip_stats"},
+      "企业招投标信息": {"product_id": "your_real_product_id_for_bidding"}
     }
   },
   "high_screen": {
     "url": "https://example.com/enterprise-search-endpoint",
-    "product_id": "your_high_screen_product_id",
+    "product_id": "your_real_product_id_for_enterprise_search",
     "secret_id": "your_high_screen_secret_id",
     "secret_key": "your_high_screen_secret_key",
     "default_page_size": 20
   }
 }
 ```
+
+字段说明：
+
+- 所有 `product_id` 都可以填写你在数据平台 / 商品控制台拿到的真实商品 ID。
+- `handaas.products` 里的每个产品名只是本地调用别名，可以按你实际开通的商品增删；别名要和分析脚本里使用的证据来源名称一致。
+- 如果你更喜欢简写，`products` 也支持 `"工商照面": "真实商品ID"` 这种字符串形式。
+- `secret_id`、`secret_key` 属于凭证，只放在本地配置文件里，不要提交到 Git。
+- 真实商品 ID 通常不是签名密钥，但可能暴露你的开通范围；建议也只写在本地配置文件中。
 
 脚本按以下顺序读取配置：
 
@@ -423,7 +431,7 @@ python scripts/validate_config.py --config /path/to/handaas.config.json
 
 ### 2. 仍是占位值
 
-说明配置中还有 `your_...` 或 `product_id_for_...`。真实查询前必须替换成自己的接口参数。
+说明配置中还有 `your_...`、`your_real_product_id_for_...` 或其他占位值。真实查询前必须替换成自己的接口参数和真实商品 ID。
 
 ### 3. 查询太宽或噪声太多
 
