@@ -8,6 +8,7 @@
 
 - [适用场景](#适用场景)
 - [最小上手流程](#最小上手流程)
+- [一句话安装调试](#一句话安装调试)
 - [仓库结构](#仓库结构)
 - [安装到 Codex](#安装到-codex)
 - [配置 Handaas / high-screen](#配置-handaas--high-screen)
@@ -63,8 +64,24 @@ python ~/.codex/skills/industry-chain-processing/scripts/validate_config.py
 验证通过后，在 Codex 中直接说：
 
 ```text
-使用 industry-chain-processing，为“低空经济 > 航空器制造 > eVTOL整机制造”查询候选企业，先 dry-run。
+使用旷湖产业链分析，为“低空经济 > 航空器制造 > eVTOL整机制造”查询候选企业，先 dry-run。
 ```
+
+## 一句话安装调试
+
+给普通用户最省事的方式：把下面这段话复制到自己的 AI 编程工具里，例如 Codex，让工具自动完成克隆、安装、配置文件创建和 dry-run 验证。
+
+```text
+请帮我安装并调试 GitHub 仓库 https://github.com/sunjackson/industry-chain-processing-skill 的 Codex Skill：克隆仓库，把 industry-chain-processing/ 安装到 ~/.codex/skills/industry-chain-processing，复制 assets/config.example.json 到 ~/.industry-chain-processing/handaas.config.json，提醒我填入自己的 Handaas/high-screen 参数且不要提交凭证，然后运行 quick_validate、py_compile、validate_config --allow-placeholders 和 link_enterprises --dry-run 验证；安装完成后，我希望直接用“使用旷湖产业链分析，完成...”来调用。
+```
+
+如果仓库是私有仓库，或用户只配置了 GitHub SSH 权限，可以把上面的仓库地址替换成：
+
+```text
+git@github.com:sunjackson/industry-chain-processing-skill.git
+```
+
+> `industry-chain-processing` 是内部 Skill 包名；用户日常不需要记这个名字，直接说“使用旷湖产业链分析...”即可。
 
 ## 仓库结构
 
@@ -215,12 +232,12 @@ python ~/.codex/skills/industry-chain-processing/scripts/validate_config.py \
 
 ## 在 Codex 中使用
 
-安装后，可以直接让 Codex 使用该 Skill。
+安装后，可以直接让 Codex 使用该 Skill。推荐用户侧调用话术是“使用旷湖产业链分析...”，不需要输入内部包名 `industry-chain-processing`。
 
 ### 示例 1：生成产业链本体
 
 ```text
-使用 industry-chain-processing，帮我生成“低空经济”产业链 L1-L5 本体，企业不要放进图谱层级。
+使用旷湖产业链分析，帮我生成“低空经济”产业链 L1-L5 本体，企业不要放进图谱层级。
 ```
 
 期望 Codex 输出：
@@ -234,7 +251,7 @@ python ~/.codex/skills/industry-chain-processing/scripts/validate_config.py \
 ### 示例 2：为单个 L5 节点构造高筛条件
 
 ```text
-使用 industry-chain-processing，为“低空经济 > 航空器制造 > eVTOL整机制造”构造 high-screen 条件组，先 dry-run，不真实调用接口。
+使用旷湖产业链分析，为“低空经济 > 航空器制造 > eVTOL整机制造”构造 high-screen 条件组，先 dry-run，不真实调用接口。
 ```
 
 Codex 应优先调用：
@@ -249,7 +266,7 @@ python ~/.codex/skills/industry-chain-processing/scripts/build_condition.py \
 ### 示例 3：调用高筛接口找企业
 
 ```text
-使用 industry-chain-processing，调用我的本地 high-screen 配置，为“eVTOL整机制造”查询前 10 个候选企业。
+使用旷湖产业链分析，调用我的本地 high-screen 配置，为“eVTOL整机制造”查询前 10 个候选企业。
 ```
 
 Codex 应先运行 `validate_config.py` 检查配置可用，然后执行 high-screen 查询。若你还没有确认要真实调用，可以要求：
@@ -261,7 +278,7 @@ Codex 应先运行 `validate_config.py` 检查配置可用，然后执行 high-s
 ### 示例 4：带 Handaas 证据核验
 
 ```text
-使用 industry-chain-processing，为“eVTOL整机制造”查询候选企业，并用工商照面、招聘明细、知识产权统计、企业招投标信息做证据核验，输出 confirmed / uncertain / rejected。
+使用旷湖产业链分析，为“eVTOL整机制造”查询候选企业，并用工商照面、招聘明细、知识产权统计、企业招投标信息做证据核验，输出 confirmed / uncertain / rejected。
 ```
 
 注意：带 `--with-evidence` 会调用多个 Handaas 产品，可能产生接口费用。

@@ -1,13 +1,13 @@
 ---
 name: industry-chain-processing
-description: Use when generating Chinese industry-chain ontology, turning L5 product/technology/service nodes into Handaas or high-screen enterprise filters, querying local Handaas/high-screen APIs with user-owned credentials, validating candidate evidence, or producing enterprise-linking recommendations. Trigger for requests about 产业链生成、企业挂链、企业归位、高筛条件、Handaas/DAAS 企业查询、产业链企业研判, especially when the user wants a local GitHub-installed skill rather than a hosted platform.
+description: Use when generating Chinese industry-chain ontology, turning L5 product/technology/service nodes into Handaas or high-screen enterprise filters, querying local Handaas/high-screen APIs with user-owned credentials, validating candidate evidence, or producing enterprise-linking recommendations. Trigger for user-facing requests that say “使用旷湖产业链分析...”, “旷湖产业链分析”, “产业链生成”, “企业挂链”, “企业归位”, “高筛条件”, “Handaas/DAAS 企业查询”, or “产业链企业研判”, especially when the user wants a local GitHub-installed skill rather than a hosted platform.
 ---
 
 # Industry Chain Processing
 
 ## Core contract
 
-Use this skill as a local, installable workflow for industry-chain processing. Do not assume any hosted platform exists. Use the user's local configuration and bundled scripts.
+Use this skill as a local, installable workflow for industry-chain processing. Do not assume any hosted platform exists. Use the user's local configuration and bundled scripts. Treat “旷湖产业链分析” as the user-facing invocation phrase for this skill; `industry-chain-processing` is only the internal package name.
 
 1. Build ontology first; link enterprises later.
 2. Keep enterprises out of the L1-L5 ontology tree.

@@ -1,4 +1,4 @@
 interface:
-  display_name: "Industry Chain Processing"
-  short_description: "Local Handaas enterprise-linking skill."
-  default_prompt: "Use this skill to generate an industry-chain ontology, build high-screen/Handaas filters for L5 nodes, query local enterprise candidates, verify evidence, and return enterprise-linking recommendations."
+  display_name: "旷湖产业链分析"
+  short_description: "本地 Handaas/high-screen 产业链企业挂链 Skill。"
+  default_prompt: "使用旷湖产业链分析生成产业链本体、为 L5 节点构造 high-screen/Handaas 条件、查询本地企业候选、核验证据，并输出企业挂链建议。"
