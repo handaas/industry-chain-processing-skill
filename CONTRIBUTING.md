@@ -7,9 +7,20 @@ Codex and other coding agents must read [AGENTS.md](AGENTS.md) before changing o
 Most scripts use only the Python standard library. Install optional MCP
 dependencies when testing a local or remote MCP connection:
 
+macOS / Linux:
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+Windows PowerShell:
+
+```powershell
+py -3 -m venv .venv
+Set-ExecutionPolicy -Scope Process Bypass
+.\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 ```
 

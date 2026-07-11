@@ -170,7 +170,7 @@ Web research is allowed for current policy, market, technology, commercializatio
 
 - Never print or commit tokens, credentials, signatures, signed requests, customer lists, or raw private evidence.
 - Redact URL query tokens and secret-like mapping keys.
-- Real configuration belongs in environment variables or `~/.industry-chain-processing/handaas.config.json`.
+- Real configuration belongs in environment variables or the current user's `.industry-chain-processing/handaas.config.json`; use `references/os-operations.md` to create it on macOS/Linux or Windows.
 - `output/`, `.omx/`, `.playwright-cli/`, caches, and local config files are ignored.
 - Product IDs may be committed because they are stable public identifiers.
 
@@ -182,7 +182,7 @@ Run before claiming completion:
 python -m unittest discover -s tests -v
 ruff check industry-chain-processing/scripts tests
 python -m compileall -q industry-chain-processing/scripts tests
-python /path/to/skill-creator/scripts/quick_validate.py industry-chain-processing
+# Also run the quick_validate.py supplied by the installed skill-creator.
 git diff --check
 ```
 
@@ -191,6 +191,7 @@ Current expected baseline is at least 63 unit tests. For MCP changes, also run `
 ## Documentation and release rules
 
 - README is user-facing: installation, MCP connection, workflows, outputs, examples, and troubleshooting.
+- Installation/configuration guidance must detect macOS/Linux versus Windows PowerShell and use `references/os-operations.md`. Prefer repository-relative script paths and executable-discovery commands over fixed Unix home paths or drive-specific paths.
 - Keep detailed contributor workflow in `CONTRIBUTING.md` and security policy in `SECURITY.md`; link them from README without duplicating full sections.
 - `tests/` stays committed for CI but is outside the installed `industry-chain-processing/` Skill directory.
 - Keep `SKILL.md` concise and under 500 lines; move detail into direct references.

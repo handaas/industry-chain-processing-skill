@@ -10,39 +10,70 @@ Official project and deployment guide: [handaas/industry-chain-mcp-server](https
 
 After creating the `industry-chain-mcp-server` service on the platform, set either the token or the full URL:
 
+macOS / Linux:
+
 ```bash
 export INDUSTRY_CHAIN_MCP_TOKEN="your_remote_mcp_token"
 # or
 export INDUSTRY_CHAIN_MCP_URL="https://mcp.handaas.com/industry-chain/industry_chain?token=${INDUSTRY_CHAIN_MCP_TOKEN}"
 ```
 
+Windows PowerShell:
+
+```powershell
+$env:INDUSTRY_CHAIN_MCP_TOKEN = "your_remote_mcp_token"
+# or
+$env:INDUSTRY_CHAIN_MCP_URL = "https://mcp.handaas.com/industry-chain/industry_chain?token=$($env:INDUSTRY_CHAIN_MCP_TOKEN)"
+```
+
 ### Option B: local streamable-http MCP
 
 Run the MCP server locally, then point the skill to the local endpoint:
 
+macOS / Linux:
+
 ```bash
 git clone https://github.com/handaas/industry-chain-mcp-server
 cd industry-chain-mcp-server
-python -m venv mcp_env && source mcp_env/bin/activate
-pip install -r requirements.txt
+python3 -m venv mcp_env
+source mcp_env/bin/activate
+python -m pip install -r requirements.txt
 cp .env.example .env
-# edit .env: INTEGRATOR_ID / SECRET_ID / SECRET_KEY
-python server/mcp_server.py streamable-http
+${EDITOR:-nano} .env
+./start_mcp_server.sh
 ```
 
-In the skill shell:
+Windows PowerShell:
+
+```powershell
+git clone https://github.com/handaas/industry-chain-mcp-server
+Set-Location industry-chain-mcp-server
+py -3 -m venv mcp_env
+Set-ExecutionPolicy -Scope Process Bypass
+.\mcp_env\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+Copy-Item .env.example .env
+notepad .env
+python .\server\mcp_server.py streamable-http
+```
+
+In a separate Skill shell, set the endpoint.
+
+macOS / Linux:
 
 ```bash
 export INDUSTRY_CHAIN_MCP_URL="http://127.0.0.1:8000/mcp"
 ```
 
+Windows PowerShell:
+
+```powershell
+$env:INDUSTRY_CHAIN_MCP_URL = "http://127.0.0.1:8000/mcp"
+```
+
 ### Skill-side checks
 
-```bash
-python scripts/validate_config.py
-python scripts/mcp_client.py ping
-python scripts/mcp_client.py list-tools
-```
+Run checks from the repository root. macOS/Linux uses `python industry-chain-processing/scripts/...`; Windows PowerShell uses `python .\industry-chain-processing\scripts\...`. See `os-operations.md` for complete commands.
 
 If `list-tools` works, the skill can use the MCP service without separately configuring local `handaas` credentials. Reports, policy analysis, enterprise positioning, evidence review, and keyword candidate recall work in this mode. Precise condition-group ES acceptance still requires an opened `high_screen` interface when the Remote MCP does not expose an equivalent product.
 
@@ -67,7 +98,7 @@ Scripts read JSON config from:
 1. `--config <path>` CLI argument
 2. `INDUSTRY_CHAIN_CONFIG` environment variable
 3. `HANDAAS_CONFIG` environment variable
-4. `~/.industry-chain-processing/handaas.config.json`
+4. The current user's `.industry-chain-processing/handaas.config.json` under `$HOME` (macOS/Linux or Windows)
 5. `assets/config.example.json` only for dry-run examples
 
 ## Config shape

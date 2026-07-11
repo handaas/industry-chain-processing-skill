@@ -31,6 +31,7 @@ When this skill is active:
 - Open the MCP project README when the user needs local deployment, environment variables, client configuration, tool inventory, or troubleshooting.
 - For Remote MCP, prefer the platform-issued token or complete MCP URL; do not require cloning the MCP repository.
 - For local MCP, guide the user to clone the official project above, copy `.env.example` to `.env`, start `streamable-http`, and set `INDUSTRY_CHAIN_MCP_URL` to the local `/mcp` endpoint.
+- Detect macOS/Linux versus Windows PowerShell and use `references/os-operations.md`; do not present a Unix home path or shell command as universal configuration guidance.
 - After either setup path, run `scripts/mcp_client.py ping` and `scripts/mcp_client.py list-tools` before the first real query.
 
 ## Load references only when needed
@@ -39,6 +40,7 @@ When this skill is active:
 - Project graph / node records / current app reuse: `references/project-context.md`.
 - Internal ontology normalization: `references/ontology-contract.md`.
 - MCP or local credential/config issues: `references/local-enterprise-config.md`.
+- Installation, environment variables, local paths, and MCP startup by operating system: `references/os-operations.md`.
 - Regional policy analysis: `references/policy-analysis.md`.
 - Search strategy construction: `references/enterprise-search-rules.md`.
 - ES condition relevance tuning, labels, metrics, and baseline comparison: `references/es-relevance-tuning.md`.
@@ -153,7 +155,7 @@ python scripts/compose_industry_report.py \
   --project-chain "智能网联汽车" \
   --project-node "自动驾驶" \
   --market-note "政策背景|权威政策、市场或技术要点|来源名称|https://example.com|2026-01-01" \
-  --output /tmp/industry-chain-analysis.json
+  --output output/industry-chain-analysis.json
 
 python scripts/policy_analysis.py \
   --chain "智能汽车" \
@@ -162,14 +164,14 @@ python scripts/policy_analysis.py \
   --region "广东省" \
   --region "上海" \
   --policy-start "2025-01-01" \
-  --web-context /tmp/policy-web-context.json \
-  --output /tmp/policy-analysis.json
+  --web-context output/policy-web-context.json \
+  --output output/policy-analysis.json
 
 python scripts/enterprise_chain_positioning.py \
   --enterprise "深圳市汇川技术股份有限公司" \
   --project-root "$INDUSTRY_CHAIN_PROJECT_ROOT" \
-  --output /tmp/enterprise-chain-positioning.json \
-  --report-output /tmp/enterprise-chain-positioning.html
+  --output output/enterprise-chain-positioning.json \
+  --report-output output/enterprise-chain-positioning.html
 
 python scripts/link_enterprises.py \
   --chain "工业母机" \
@@ -179,8 +181,8 @@ python scripts/link_enterprises.py \
   --page-size 5 \
   --with-evidence \
   --require-es \
-  --output /tmp/servo-drive-enterprise-linking.json \
-  --report-output /tmp/servo-drive-enterprise-linking.html
+  --output output/servo-drive-enterprise-linking.json \
+  --report-output output/servo-drive-enterprise-linking.html
 
 python scripts/link_chain_nodes.py \
   --chain "工业母机" \
@@ -188,23 +190,23 @@ python scripts/link_chain_nodes.py \
   --role upstream \
   --max-nodes 20 \
   --dry-run \
-  --output /tmp/industrial-machine-upstream-plan.json \
-  --report-output /tmp/industrial-machine-upstream-plan.html
+  --output output/industrial-machine-upstream-plan.json \
+  --report-output output/industrial-machine-upstream-plan.html
 
 python scripts/tune_search_conditions.py \
-  --config /path/to/handaas.config.json \
+  --config "$INDUSTRY_CHAIN_CONFIG" \
   --chain "工业母机" \
   --node "伺服驱动器" \
   --path "工业母机>上游：核心零部件与基础材料>伺服系统>伺服驱动器" \
   --project-root "$INDUSTRY_CHAIN_PROJECT_ROOT" \
-  --labels /path/to/servo-labels.json \
+  --labels assets/search-tuning-labels.example.json \
   --with-evidence \
-  --output /tmp/servo-search-evaluation.json
+  --output output/servo-search-evaluation.json
 
 python scripts/probe_business_evidence.py \
   --cases assets/business-evidence-cases.example.json \
   --max-combination-size 0 \
-  --output /tmp/business-evidence-probe.json
+  --output output/business-evidence-probe.json
 
 python scripts/enterprise_node_report.py \
   --chain "智能汽车" \
@@ -215,11 +217,11 @@ python scripts/enterprise_node_report.py \
   --project-root "$INDUSTRY_CHAIN_PROJECT_ROOT" \
   --project-chain "智能网联汽车" \
   --project-node "自动驾驶" \
-  --output /tmp/enterprise-node.json \
-  --report-output /tmp/enterprise-node.html
+  --output output/enterprise-node.json \
+  --report-output output/enterprise-node.html
 
-python scripts/render_report.py --input /tmp/industry-chain-analysis.json --output /tmp/industry-chain-analysis.html
-python scripts/render_report.py --input /tmp/enterprise-node.json --output /tmp/enterprise-node.md
+python scripts/render_report.py --input output/industry-chain-analysis.json --output output/industry-chain-analysis.html
+python scripts/render_report.py --input output/enterprise-node.json --output output/enterprise-node.md
 ```
 
 ## Output guidance

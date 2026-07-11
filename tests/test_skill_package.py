@@ -40,6 +40,15 @@ class SkillPackageTests(unittest.TestCase):
         self.assertEqual(actual, expected)
         self.assertEqual(config["high_screen"]["product_id"], "690dcb1b9c9dc8d0ff3c40eb")
 
+    def test_os_specific_setup_guidance_is_packaged(self):
+        reference = (SKILL / "references" / "os-operations.md").read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        for marker in ("macOS / Linux", "Windows PowerShell", "Activate.ps1", "Join-Path"):
+            self.assertIn(marker, reference)
+            self.assertIn(marker, readme)
+        self.assertNotIn("~/.codex/skills/industry-chain-processing", readme)
+        self.assertNotIn("/path/to/handaas.config.json", readme)
+
     def test_documented_scripts_exist(self):
         required = {
             "compose_industry_report.py",

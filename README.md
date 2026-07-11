@@ -94,47 +94,54 @@ git@github.com:handaas/industry-chain-processing-skill.git
 
 ## 安装到本地智能体
 
-### 通用安装逻辑
+先克隆仓库，然后按操作系统执行对应命令。后续示例默认从仓库根目录运行，避免依赖固定安装路径。
+
+### macOS / Linux
 
 ```bash
 git clone https://github.com/handaas/industry-chain-processing-skill.git
 cd industry-chain-processing-skill
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+mkdir -p "$HOME/.codex/skills"
+rm -rf "$HOME/.codex/skills/industry-chain-processing"
+cp -R industry-chain-processing "$HOME/.codex/skills/"
 ```
 
-如果你的智能体支持 Codex-compatible Skill 目录，例如 `~/.codex/skills`，安装 Skill 包：
+开发者希望代码修改后立即生效时，可以用软链接代替复制：
 
 ```bash
-mkdir -p ~/.codex/skills
-cp -R industry-chain-processing ~/.codex/skills/
+rm -rf "$HOME/.codex/skills/industry-chain-processing"
+ln -sfn "$(pwd)/industry-chain-processing" \
+  "$HOME/.codex/skills/industry-chain-processing"
 ```
 
-如果你的智能体没有 Skill 目录，也可以直接把仓库作为本地工具包使用：让智能体读取本 README、`industry-chain-processing/SKILL.md` 和 `industry-chain-processing/references/`，并调用 `industry-chain-processing/scripts/` 下的脚本。
+### Windows PowerShell
 
-### Codex 复制安装
-
-```bash
+```powershell
 git clone https://github.com/handaas/industry-chain-processing-skill.git
-mkdir -p ~/.codex/skills
-cp -R industry-chain-processing-skill/industry-chain-processing ~/.codex/skills/
+Set-Location industry-chain-processing-skill
+py -3 -m venv .venv
+Set-ExecutionPolicy -Scope Process Bypass
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+$skillsRoot = Join-Path $HOME ".codex\skills"
+$skillTarget = Join-Path $skillsRoot "industry-chain-processing"
+New-Item -ItemType Directory -Force -Path $skillsRoot | Out-Null
+Remove-Item -Recurse -Force $skillTarget -ErrorAction SilentlyContinue
+Copy-Item -Recurse .\industry-chain-processing $skillTarget
 ```
 
-更新时重新复制：
+开发者可以用目录联接代替复制：
 
-```bash
-cd industry-chain-processing-skill
-git pull
-rm -rf ~/.codex/skills/industry-chain-processing
-cp -R industry-chain-processing ~/.codex/skills/
+```powershell
+$source = (Resolve-Path .\industry-chain-processing).Path
+Remove-Item -Recurse -Force $skillTarget -ErrorAction SilentlyContinue
+New-Item -ItemType Junction -Path $skillTarget -Target $source | Out-Null
 ```
 
-### Codex 软链接安装，推荐给开发者
-
-```bash
-git clone https://github.com/handaas/industry-chain-processing-skill.git
-mkdir -p ~/.codex/skills
-ln -sfn "$(pwd)/industry-chain-processing-skill/industry-chain-processing" \
-  ~/.codex/skills/industry-chain-processing
-```
+如果智能体不支持 Codex-compatible Skill 目录，也可以直接保留仓库作为本地工具包，让智能体读取本 README、`industry-chain-processing/SKILL.md` 和 `industry-chain-processing/references/`。
 
 安装后重启对应智能体，或在支持热加载的客户端中刷新 Skill / 工具列表。
 
@@ -146,37 +153,70 @@ MCP 项目地址：**[handaas/industry-chain-mcp-server](https://github.com/hand
 
 如果你的 Python 环境还没有 MCP 客户端依赖，先安装：
 
-```bash
-python3 -m pip install -r requirements.txt
-```
+macOS / Linux 使用 `python -m pip install -r requirements.txt`；Windows PowerShell 在虚拟环境激活后执行相同命令。
 
 ### 方式一：使用官方 Remote MCP
 
 如果你已经在平台创建了 `industry-chain-mcp-server` 并拿到 token，不需要在本 Skill 中分别配置 `integrator_id`、`secret_id`、`secret_key`、企业搜索 URL 或各数据产品 ID。设置 token 即可：
 
+macOS / Linux：
+
 ```bash
 export INDUSTRY_CHAIN_MCP_TOKEN="<platform-token>"
 ```
 
+Windows PowerShell：
+
+```powershell
+$env:INDUSTRY_CHAIN_MCP_TOKEN = "<platform-token>"
+```
+
 如果平台返回的是完整 Remote MCP URL：
+
+macOS / Linux：
 
 ```bash
 export INDUSTRY_CHAIN_MCP_URL="https://mcp.handaas.com/industry-chain/industry_chain?token=${INDUSTRY_CHAIN_MCP_TOKEN}"
+```
+
+Windows PowerShell：
+
+```powershell
+$env:INDUSTRY_CHAIN_MCP_URL = "https://mcp.handaas.com/industry-chain/industry_chain?token=$($env:INDUSTRY_CHAIN_MCP_TOKEN)"
 ```
 
 ### 方式二：连接本地部署的 MCP 服务
 
 如果你希望本地部署 MCP 服务，再让 Skill 连接它：
 
+macOS / Linux：
+
 ```bash
 git clone https://github.com/handaas/industry-chain-mcp-server
 cd industry-chain-mcp-server
-python -m venv mcp_env && source mcp_env/bin/activate
-pip install -r requirements.txt
+python3 -m venv mcp_env
+source mcp_env/bin/activate
+python -m pip install -r requirements.txt
 cp .env.example .env
+${EDITOR:-nano} .env
+./start_mcp_server.sh
 ```
 
-编辑 `.env`，填入本地服务调用 HandaaS 所需的凭证：
+Windows PowerShell：
+
+```powershell
+git clone https://github.com/handaas/industry-chain-mcp-server
+Set-Location industry-chain-mcp-server
+py -3 -m venv mcp_env
+Set-ExecutionPolicy -Scope Process Bypass
+.\mcp_env\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+Copy-Item .env.example .env
+notepad .env
+python .\server\mcp_server.py streamable-http
+```
+
+在 `.env` 中填入本地服务调用 HandaaS 所需的凭证：
 
 ```env
 INTEGRATOR_ID=your_integrator_id
@@ -184,16 +224,18 @@ SECRET_ID=your_secret_id
 SECRET_KEY=your_secret_key
 ```
 
-启动本地 MCP：
-
-```bash
-python server/mcp_server.py streamable-http
-```
-
 再在使用 Skill 的 shell 中指定本地 MCP 地址：
+
+macOS / Linux：
 
 ```bash
 export INDUSTRY_CHAIN_MCP_URL="http://127.0.0.1:8000/mcp"
+```
+
+Windows PowerShell：
+
+```powershell
+$env:INDUSTRY_CHAIN_MCP_URL = "http://127.0.0.1:8000/mcp"
 ```
 
 本地 MCP 由你自己的 `.env` 持有凭证；Skill 侧只需要 `INDUSTRY_CHAIN_MCP_URL`。
@@ -202,10 +244,20 @@ export INDUSTRY_CHAIN_MCP_URL="http://127.0.0.1:8000/mcp"
 
 无论使用官方 Remote MCP 还是本地 MCP，都用同一组命令验证：
 
+macOS / Linux（仓库根目录）：
+
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/validate_config.py
-python ~/.codex/skills/industry-chain-processing/scripts/mcp_client.py ping
-python ~/.codex/skills/industry-chain-processing/scripts/mcp_client.py list-tools
+python industry-chain-processing/scripts/validate_config.py
+python industry-chain-processing/scripts/mcp_client.py ping
+python industry-chain-processing/scripts/mcp_client.py list-tools
+```
+
+Windows PowerShell（仓库根目录）：
+
+```powershell
+python .\industry-chain-processing\scripts\validate_config.py
+python .\industry-chain-processing\scripts\mcp_client.py ping
+python .\industry-chain-processing\scripts\mcp_client.py list-tools
 ```
 
 `list-tools` 中应看到 HandaaS 接口封装类工具，例如：
@@ -223,7 +275,7 @@ python ~/.codex/skills/industry-chain-processing/scripts/mcp_client.py list-tool
 之后正常使用：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/link_enterprises.py \
+python industry-chain-processing/scripts/link_enterprises.py \
   --chain "低空经济" \
   --node "eVTOL整机制造"
 ```
@@ -236,17 +288,25 @@ python ~/.codex/skills/industry-chain-processing/scripts/link_enterprises.py \
 
 如果不使用官方 Remote MCP，也不启动本地 MCP，可以让 Skill 直接读取你本机的 HandaaS / high_screen 配置。只做产业链分析和模拟运行时可以先不填真实接口参数；要真实查询企业时再创建本地配置文件：
 
+macOS / Linux（仓库根目录）：
+
 ```bash
-mkdir -p ~/.industry-chain-processing
-cp ~/.codex/skills/industry-chain-processing/assets/config.example.json \
-  ~/.industry-chain-processing/handaas.config.json
-vim ~/.industry-chain-processing/handaas.config.json
+mkdir -p "$HOME/.industry-chain-processing"
+cp industry-chain-processing/assets/config.example.json \
+  "$HOME/.industry-chain-processing/handaas.config.json"
+${EDITOR:-nano} "$HOME/.industry-chain-processing/handaas.config.json"
+export INDUSTRY_CHAIN_CONFIG="$HOME/.industry-chain-processing/handaas.config.json"
 ```
 
-如果不是安装在 `~/.codex/skills`，把上面的源路径替换为仓库中的：
+Windows PowerShell（仓库根目录）：
 
-```bash
-industry-chain-processing/assets/config.example.json
+```powershell
+$configRoot = Join-Path $HOME ".industry-chain-processing"
+$configPath = Join-Path $configRoot "handaas.config.json"
+New-Item -ItemType Directory -Force -Path $configRoot | Out-Null
+Copy-Item .\industry-chain-processing\assets\config.example.json $configPath
+notepad $configPath
+$env:INDUSTRY_CHAIN_CONFIG = $configPath
 ```
 
 配置文件示例：
@@ -300,10 +360,21 @@ industry-chain-processing/assets/config.example.json
 
 可选环境变量：
 
+macOS / Linux：
+
 ```bash
-export INDUSTRY_CHAIN_CONFIG=~/.industry-chain-processing/handaas.config.json
+export INDUSTRY_CHAIN_CONFIG="$HOME/.industry-chain-processing/handaas.config.json"
 # 或
-export HANDAAS_CONFIG=~/.industry-chain-processing/handaas.config.json
+export HANDAAS_CONFIG="$HOME/.industry-chain-processing/handaas.config.json"
+```
+
+Windows PowerShell：
+
+```powershell
+$configPath = Join-Path $HOME ".industry-chain-processing\handaas.config.json"
+$env:INDUSTRY_CHAIN_CONFIG = $configPath
+# 或
+$env:HANDAAS_CONFIG = $configPath
 ```
 
 如需强制不用 MCP、只测本地直连凭证，脚本支持 `--local`。
@@ -313,14 +384,14 @@ export HANDAAS_CONFIG=~/.industry-chain-processing/handaas.config.json
 验证真实配置：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/validate_config.py
+python industry-chain-processing/scripts/validate_config.py
 ```
 
 只验证示例配置，不要求真实凭证：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/validate_config.py \
-  --config ~/.codex/skills/industry-chain-processing/assets/config.example.json \
+python industry-chain-processing/scripts/validate_config.py \
+  --config industry-chain-processing/assets/config.example.json \
   --allow-placeholders
 ```
 
@@ -406,14 +477,20 @@ python ~/.codex/skills/industry-chain-processing/scripts/validate_config.py \
 
 如果你的项目就在默认同级目录，通常不用配置；为了让其他环境也稳定复用，建议显式设置：
 
+macOS / Linux（先进入图谱项目目录）：
+
 ```bash
-export INDUSTRY_CHAIN_PROJECT_ROOT="/path/to/industry-chain-map"
+cd ../industry-chain-map
+export INDUSTRY_CHAIN_PROJECT_ROOT="$(pwd)"
+cd -
 ```
 
-也可以在脚本里直接传：
+Windows PowerShell（先进入图谱项目目录）：
 
-```bash
---project-root /path/to/industry-chain-map
+```powershell
+Push-Location ..\industry-chain-map
+$env:INDUSTRY_CHAIN_PROJECT_ROOT = (Get-Location).Path
+Pop-Location
 ```
 
 ### 会复用哪些项目数据
@@ -455,7 +532,7 @@ export INDUSTRY_CHAIN_PROJECT_ROOT="/path/to/industry-chain-map"
 示例：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/policy_analysis.py \
+python industry-chain-processing/scripts/policy_analysis.py \
   --chain "智能汽车" \
   --keyword "智能网联汽车 自动驾驶" \
   --region "国家部委" \
@@ -463,12 +540,12 @@ python ~/.codex/skills/industry-chain-processing/scripts/policy_analysis.py \
   --region "上海" \
   --region "江苏省" \
   --policy-start "2025-01-01" \
-  --web-context /tmp/policy-web-context.json \
-  --output /tmp/policy-analysis.json
+  --web-context output/policy-web-context.json \
+  --output output/policy-analysis.json
 
-python ~/.codex/skills/industry-chain-processing/scripts/render_report.py \
-  --input /tmp/policy-analysis.json \
-  --output /tmp/policy-analysis.html
+python industry-chain-processing/scripts/render_report.py \
+  --input output/policy-analysis.json \
+  --output output/policy-analysis.html
 ```
 
 联网搜索结果可以保存为：
@@ -527,11 +604,7 @@ python ~/.codex/skills/industry-chain-processing/scripts/render_report.py \
 - 每条保留 `topic`、`finding`、`source`、`url`、`date`。
 - 没有网络或用户要求离线时，继续使用项目图谱生成报告，不编造外部事实。
 
-若要复用当前项目图谱，先设置项目根目录：
-
-```bash
-export INDUSTRY_CHAIN_PROJECT_ROOT="/path/to/industry-chain-map"
-```
+若要复用当前项目图谱，按上文对应操作系统的方式设置 `INDUSTRY_CHAIN_PROJECT_ROOT`。
 
 可选：把联网收集到的背景保存为 JSON：
 
@@ -552,39 +625,39 @@ export INDUSTRY_CHAIN_PROJECT_ROOT="/path/to/industry-chain-map"
 生成报告 JSON：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/compose_industry_report.py \
+python industry-chain-processing/scripts/compose_industry_report.py \
   --chain "智能汽车" \
   --node "自动驾驶" \
   --project-root "$INDUSTRY_CHAIN_PROJECT_ROOT" \
   --project-chain "智能网联汽车" \
   --project-node "自动驾驶" \
-  --market-context /tmp/smart-car-market-context.json \
-  --output /tmp/smart-car-chain-analysis-report.json
+  --market-context output/smart-car-market-context.json \
+  --output output/smart-car-chain-analysis-report.json
 ```
 
 也可以不用 JSON 文件，直接传多条摘要：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/compose_industry_report.py \
+python industry-chain-processing/scripts/compose_industry_report.py \
   --chain "智能汽车" \
   --node "自动驾驶" \
   --project-root "$INDUSTRY_CHAIN_PROJECT_ROOT" \
   --project-chain "智能网联汽车" \
   --project-node "自动驾驶" \
   --market-note "政策背景|智能网联汽车相关政策正在推动自动驾驶试点、车路云协同和规模化应用验证|权威来源|https://example.com|2026-01-01" \
-  --output /tmp/smart-car-chain-analysis-report.json
+  --output output/smart-car-chain-analysis-report.json
 ```
 
 渲染为 HTML / Markdown：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/render_report.py \
-  --input /tmp/smart-car-chain-analysis-report.json \
-  --output /tmp/smart-car-chain-analysis-report.html
+python industry-chain-processing/scripts/render_report.py \
+  --input output/smart-car-chain-analysis-report.json \
+  --output output/smart-car-chain-analysis-report.html
 
-python ~/.codex/skills/industry-chain-processing/scripts/render_report.py \
-  --input /tmp/smart-car-chain-analysis-report.json \
-  --output /tmp/smart-car-chain-analysis-report.md
+python industry-chain-processing/scripts/render_report.py \
+  --input output/smart-car-chain-analysis-report.json \
+  --output output/smart-car-chain-analysis-report.md
 ```
 
 ### 企业挂链报告（单独生成）
@@ -592,7 +665,7 @@ python ~/.codex/skills/industry-chain-processing/scripts/render_report.py \
 如果你还需要企业挂链，再单独跑企业召回、证据核验和挂链结果。精准挂链分别组合 `industriesV2`、`businessKeywords`、`business/desc` 和招聘/专利/招投标强证据；最高精度路由同时要求业务关键词、经营范围/简介和强证据，其他路由负责补回字段缺失或行业错分企业。多路候选按路由优先级和共识度排序后，再按企业业务、简介/标签、专利申请人和招投标信息进行独立来源复核。代表企业和高筛命中本身都不会直接确认为挂链结果。
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/link_enterprises.py \
+python industry-chain-processing/scripts/link_enterprises.py \
   --chain "智能汽车" \
   --node "自动驾驶" \
   --path "智能汽车产业链>智能化系统>自动驾驶" \
@@ -600,29 +673,29 @@ python ~/.codex/skills/industry-chain-processing/scripts/link_enterprises.py \
   --max-candidates 20 \
   --with-evidence \
   --require-es \
-  --output /tmp/smart-car-enterprise-linking.json \
-  --report-output /tmp/smart-car-enterprise-linking.html
+  --output output/smart-car-enterprise-linking.json \
+  --report-output output/smart-car-enterprise-linking.html
 ```
 
 整条产业链逐节点挂链先生成全部 L5 节点的 ES 计划，再按批次真实执行：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/link_chain_nodes.py \
+python industry-chain-processing/scripts/link_chain_nodes.py \
   --chain "工业母机" \
   --project-root "$INDUSTRY_CHAIN_PROJECT_ROOT" \
   --max-nodes 0 \
   --dry-run \
-  --output /tmp/industrial-machine-linking-plan.json
+  --output output/industrial-machine-linking-plan.json
 
-python ~/.codex/skills/industry-chain-processing/scripts/link_chain_nodes.py \
+python industry-chain-processing/scripts/link_chain_nodes.py \
   --chain "工业母机" \
   --project-root "$INDUSTRY_CHAIN_PROJECT_ROOT" \
   --max-nodes 20 \
   --with-evidence \
   --require-es \
   --resume \
-  --output /tmp/industrial-machine-linking.json \
-  --report-output /tmp/industrial-machine-linking.html
+  --output output/industrial-machine-linking.json \
+  --report-output output/industrial-machine-linking.html
 ```
 
 `--max-nodes 0` 表示处理所有匹配节点；真实调用建议分批设置 `--offset` 和 `--max-nodes`。Remote MCP 只提供关键词搜索时，结果会明确标记为 `precision_limited`，不能作为精准 ES 挂链验收结果。
@@ -632,11 +705,11 @@ python ~/.codex/skills/industry-chain-processing/scripts/link_chain_nodes.py \
 不需要先指定产业链或节点。Skill 会解析企业主体，通过已配置的 MCP 查询企业画像、业务、标签、专利和招投标信息，并与项目全部 L5 节点比较：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/enterprise_chain_positioning.py \
+python industry-chain-processing/scripts/enterprise_chain_positioning.py \
   --enterprise "深圳市汇川技术股份有限公司" \
   --project-root "$INDUSTRY_CHAIN_PROJECT_ROOT" \
-  --output /tmp/enterprise-chain-positioning.json \
-  --report-output /tmp/enterprise-chain-positioning.html
+  --output output/enterprise-chain-positioning.json \
+  --report-output output/enterprise-chain-positioning.html
 ```
 
 输出包含主归属产业链、L2/L3/L5 完整路径、候选产业链对比、候选节点、证据覆盖和定位边界。若企业横跨多个产业链且分数接近，报告会保留备选归属，不作排他性判断。
@@ -644,11 +717,11 @@ python ~/.codex/skills/industry-chain-processing/scripts/enterprise_chain_positi
 如果需要 Markdown，将报告输出路径改为 `.md`，或显式传入 `--report-format markdown`：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/enterprise_chain_positioning.py \
+python industry-chain-processing/scripts/enterprise_chain_positioning.py \
   --enterprise "深圳市汇川技术股份有限公司" \
   --project-root "$INDUSTRY_CHAIN_PROJECT_ROOT" \
-  --output /tmp/enterprise-chain-positioning.json \
-  --report-output /tmp/enterprise-chain-positioning.md
+  --output output/enterprise-chain-positioning.json \
+  --report-output output/enterprise-chain-positioning.md
 ```
 
 ### 指定企业节点详细分析报告
@@ -656,7 +729,7 @@ python ~/.codex/skills/industry-chain-processing/scripts/enterprise_chain_positi
 当你要判断某个企业应不应该挂到某个产业链节点时，直接生成企业节点分析：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/enterprise_node_report.py \
+python industry-chain-processing/scripts/enterprise_node_report.py \
   --chain "智能汽车" \
   --node "自动驾驶" \
   --path "智能汽车产业链>智能化系统>自动驾驶" \
@@ -665,8 +738,8 @@ python ~/.codex/skills/industry-chain-processing/scripts/enterprise_node_report.
   --project-root "$INDUSTRY_CHAIN_PROJECT_ROOT" \
   --project-chain "智能网联汽车" \
   --project-node "自动驾驶" \
-  --output /tmp/enterprise-node-report.json \
-  --report-output /tmp/enterprise-node-report.html
+  --output output/enterprise-node-report.json \
+  --report-output output/enterprise-node-report.html
 ```
 
 命令会同时输出结构化 JSON 和可交付报告，不需要再次调用渲染脚本。
@@ -676,56 +749,58 @@ python ~/.codex/skills/industry-chain-processing/scripts/enterprise_node_report.
 高级用户也可以直接使用脚本渲染任意结构化结果：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/render_report.py \
-  --input ~/.codex/skills/industry-chain-processing/assets/report.example.json \
-  --output /tmp/industry-report.html
+python industry-chain-processing/scripts/render_report.py \
+  --input industry-chain-processing/assets/report.example.json \
+  --output output/industry-report.html
 ```
 
 生成 Markdown：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/render_report.py \
-  --input ~/.codex/skills/industry-chain-processing/assets/report.example.json \
-  --output /tmp/industry-report.md
+python industry-chain-processing/scripts/render_report.py \
+  --input industry-chain-processing/assets/report.example.json \
+  --output output/industry-report.md
 ```
 
 ## 高级命令行用法
 
 一般用户不需要使用本节。下面命令主要用于开发、调试或排查接口问题。
 
+多行示例使用 macOS/Linux 的反斜杠续行格式。Windows PowerShell 可将命令写成一行，或把行尾 `\` 改为反引号 `` ` ``；完整操作系统命令对照见 `industry-chain-processing/references/os-operations.md`。
+
 ### 1. 配置校验
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/validate_config.py
+python industry-chain-processing/scripts/validate_config.py
 ```
 
 ### 2. 生成企业搜索策略
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/build_condition.py \
+python industry-chain-processing/scripts/build_condition.py \
   --chain "低空经济" \
   --node "eVTOL整机制造" \
   --path "低空经济产业链>航空器制造>eVTOL整机制造" \
-  --output /tmp/evtol-search.json
+  --output output/evtol-search.json
 ```
 
 追加业务词、行业边界和排除词：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/build_condition.py \
+python industry-chain-processing/scripts/build_condition.py \
   --chain "低空经济" \
   --node "eVTOL整机制造" \
   --keyword "适航认证" \
   --keyword "飞行器总装" \
   --industry "制造业/铁路、船舶、航空航天和其他运输设备制造业" \
   --exclude "航空培训" \
-  --output /tmp/evtol-search.json
+  --output output/evtol-search.json
 ```
 
 完整搜索计划包含字段拆分后的多条路由。使用 `--explain` 查看每条路由的工商条件、业务字段、强证据字段、优先级和校验结果：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/build_condition.py \
+python industry-chain-processing/scripts/build_condition.py \
   --chain "工业母机" \
   --node "伺服驱动器" \
   --path "工业母机>上游：核心零部件与基础材料>伺服系统>伺服驱动器" \
@@ -740,20 +815,20 @@ python ~/.codex/skills/industry-chain-processing/scripts/build_condition.py \
 先根据 `assets/search-tuning-labels.example.json` 建立节点正样本、负样本或 0-3 级相关性标签，再执行真实高筛和证据复核：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/tune_search_conditions.py \
-  --config /path/to/handaas.config.json \
+python industry-chain-processing/scripts/tune_search_conditions.py \
+  --config "$INDUSTRY_CHAIN_CONFIG" \
   --chain "工业母机" \
   --node "伺服驱动器" \
   --path "工业母机>上游：核心零部件与基础材料>伺服系统>伺服驱动器" \
   --project-root "$INDUSTRY_CHAIN_PROJECT_ROOT" \
-  --labels /path/to/servo-search-labels.json \
+  --labels industry-chain-processing/assets/search-tuning-labels.example.json \
   --page-size 20 \
   --pages 2 \
   --with-evidence \
-  --output /tmp/servo-search-evaluation.json
+  --output output/servo-search-evaluation.json
 ```
 
-输出包括各路由候选总量、Precision@10、MRR、DCG@10、项目代表企业命中、证据确认率、噪声率、强证据覆盖、路由重叠和独有贡献。下一轮通过 `--baseline /tmp/servo-search-evaluation.json` 比较条件修改前后变化。
+输出包括各路由候选总量、Precision@10、MRR、DCG@10、项目代表企业命中、证据确认率、噪声率、强证据覆盖、路由重叠和独有贡献。下一轮通过 `--baseline output/servo-search-evaluation.json` 比较条件修改前后变化。
 
 ### 4. HandaaS 企业业务证据组合探测
 
@@ -761,10 +836,10 @@ python ~/.codex/skills/industry-chain-processing/scripts/tune_search_conditions.
 
 ```bash
 INDUSTRY_CHAIN_MCP_URL=http://127.0.0.1:8022/mcp \
-python ~/.codex/skills/industry-chain-processing/scripts/probe_business_evidence.py \
-  --cases ~/.codex/skills/industry-chain-processing/assets/business-evidence-cases.example.json \
+python industry-chain-processing/scripts/probe_business_evidence.py \
+  --cases industry-chain-processing/assets/business-evidence-cases.example.json \
   --max-combination-size 0 \
-  --output /tmp/business-evidence-probe.json
+  --output output/business-evidence-probe.json
 ```
 
 当前回归样本中，`企业标签 + 专利搜索 + 企业招投标信息` 是高精度三接口组合；需要提高多元化企业召回时，增加工商照面和企业简介。`企业业务` 有数据时属于强证据，但不得因该商品无数据而中止复核。输出分别报告企业业务判断与最终自动挂链的精确率、召回率、特异度和平衡准确率。
@@ -774,16 +849,16 @@ python ~/.codex/skills/industry-chain-processing/scripts/probe_business_evidence
 只检查请求结构，不调用网络：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/enterprise_search_preview.py \
-  --filter-file /tmp/evtol-search.json \
+python industry-chain-processing/scripts/enterprise_search_preview.py \
+  --filter-file output/evtol-search.json \
   --dry-run
 ```
 
 ### 6. 真实查询企业
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/enterprise_search_preview.py \
-  --filter-file /tmp/evtol-search.json \
+python industry-chain-processing/scripts/enterprise_search_preview.py \
+  --filter-file output/evtol-search.json \
   --page-index 1 \
   --page-size 10
 ```
@@ -793,7 +868,7 @@ python ~/.codex/skills/industry-chain-processing/scripts/enterprise_search_previ
 模拟运行：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/link_enterprises.py \
+python industry-chain-processing/scripts/link_enterprises.py \
   --chain "低空经济" \
   --node "eVTOL整机制造" \
   --path "低空经济产业链>航空器制造>eVTOL整机制造" \
@@ -803,7 +878,7 @@ python ~/.codex/skills/industry-chain-processing/scripts/link_enterprises.py \
 真实查询候选企业：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/link_enterprises.py \
+python industry-chain-processing/scripts/link_enterprises.py \
   --chain "低空经济" \
   --node "eVTOL整机制造" \
   --path "低空经济产业链>航空器制造>eVTOL整机制造" \
@@ -813,28 +888,28 @@ python ~/.codex/skills/industry-chain-processing/scripts/link_enterprises.py \
 同时做证据核验：
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/link_enterprises.py \
+python industry-chain-processing/scripts/link_enterprises.py \
   --chain "低空经济" \
   --node "eVTOL整机制造" \
   --path "低空经济产业链>航空器制造>eVTOL整机制造" \
   --page-size 5 \
   --with-evidence \
-  --output /tmp/evtol-enterprise-linking.json \
-  --report-output /tmp/evtol-enterprise-linking.html
+  --output output/evtol-enterprise-linking.json \
+  --report-output output/evtol-enterprise-linking.html
 ```
 
 ### 8. 整条产业链逐节点挂链
 
 ```bash
-python ~/.codex/skills/industry-chain-processing/scripts/link_chain_nodes.py \
+python industry-chain-processing/scripts/link_chain_nodes.py \
   --chain "工业母机" \
   --role upstream \
   --max-nodes 20 \
   --with-evidence \
   --require-es \
   --resume \
-  --output /tmp/industrial-machine-upstream-linking.json \
-  --report-output /tmp/industrial-machine-upstream-linking.html
+  --output output/industrial-machine-upstream-linking.json \
+  --report-output output/industrial-machine-upstream-linking.html
 ```
 
 ## 仓库结构
@@ -855,6 +930,7 @@ industry-chain-processing-skill/
     │   ├── analysis-playbook.md
     │   ├── ontology-contract.md
     │   ├── local-enterprise-config.md
+    │   ├── os-operations.md
     │   ├── enterprise-search-rules.md
     │   ├── es-relevance-tuning.md
     │   ├── business-evidence-probing.md
@@ -888,17 +964,27 @@ industry-chain-processing-skill/
 如果 `mcp_client.py list-tools` 提示缺少 `mcp` 或 `httpx`：
 
 ```bash
-python3 -m pip install 'mcp>=1.12.0' httpx
+python -m pip install 'mcp>=1.12.0' httpx
 ```
 
 ### 2. Remote MCP token 不可用
 
 检查环境变量是否在当前 shell 生效：
 
+macOS / Linux：
+
 ```bash
 echo "$INDUSTRY_CHAIN_MCP_TOKEN"
 echo "$INDUSTRY_CHAIN_MCP_URL"
-python scripts/mcp_client.py ping
+python industry-chain-processing/scripts/mcp_client.py ping
+```
+
+Windows PowerShell：
+
+```powershell
+$env:INDUSTRY_CHAIN_MCP_TOKEN
+$env:INDUSTRY_CHAIN_MCP_URL
+python .\industry-chain-processing\scripts\mcp_client.py ping
 ```
 
 不要把 token 打进日志或提交到 Git。
@@ -907,10 +993,38 @@ python scripts/mcp_client.py ping
 
 确认服务已启动，并且 Skill 侧指向 `/mcp` 路径：
 
+macOS / Linux：
+
+终端 1：
+
 ```bash
-python server/mcp_server.py streamable-http
+cd ../industry-chain-mcp-server
+./start_mcp_server.sh
+```
+
+终端 2：
+
+```bash
 export INDUSTRY_CHAIN_MCP_URL="http://127.0.0.1:8000/mcp"
-python scripts/mcp_client.py list-tools
+cd ../industry-chain-processing-skill
+python industry-chain-processing/scripts/mcp_client.py list-tools
+```
+
+Windows PowerShell：
+
+PowerShell 窗口 1：
+
+```powershell
+Set-Location ..\industry-chain-mcp-server
+python .\server\mcp_server.py streamable-http
+```
+
+PowerShell 窗口 2：
+
+```powershell
+$env:INDUSTRY_CHAIN_MCP_URL = "http://127.0.0.1:8000/mcp"
+Set-Location ..\industry-chain-processing-skill
+python .\industry-chain-processing\scripts\mcp_client.py list-tools
 ```
 
 ### 4. MCP 可用工具不符合预期
@@ -921,16 +1035,22 @@ python scripts/mcp_client.py list-tools
 
 创建默认配置：
 
+macOS / Linux：
+
 ```bash
-mkdir -p ~/.industry-chain-processing
-cp ~/.codex/skills/industry-chain-processing/assets/config.example.json \
-  ~/.industry-chain-processing/handaas.config.json
+mkdir -p "$HOME/.industry-chain-processing"
+cp industry-chain-processing/assets/config.example.json \
+  "$HOME/.industry-chain-processing/handaas.config.json"
 ```
 
-或显式指定：
+Windows PowerShell：
 
-```bash
-python scripts/validate_config.py --config /path/to/handaas.config.json
+```powershell
+$configRoot = Join-Path $HOME ".industry-chain-processing"
+$configPath = Join-Path $configRoot "handaas.config.json"
+New-Item -ItemType Directory -Force -Path $configRoot | Out-Null
+Copy-Item .\industry-chain-processing\assets\config.example.json $configPath
+python .\industry-chain-processing\scripts\validate_config.py --config $configPath
 ```
 
 ### 6. 仍是占位值
@@ -950,7 +1070,7 @@ python scripts/validate_config.py --config /path/to/handaas.config.json
 先降低返回数量，或先只做模拟运行：
 
 ```bash
-python scripts/link_enterprises.py \
+python industry-chain-processing/scripts/link_enterprises.py \
   --chain "低空经济" \
   --node "eVTOL整机制造" \
   --page-size 5
