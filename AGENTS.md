@@ -31,6 +31,7 @@ Maintain an open-source Codex-compatible Skill for professional Chinese industry
 - L5 is the enterprise-linking target.
 - Reuse saved node IDs, paths, condition groups, condition keywords, and operator-confirmed project conditions.
 - Existing representative enterprises/project seeds are recall anchors, not automatic confirmation evidence.
+- A report graph is valid only when L2/L3/L5 counts are all positive and every displayed L2/L3 branch has children. Empty project graphs must be reconstructed from value-chain data or the generated fallback ontology; if still invalid, abort report generation.
 
 ## MCP integration
 
@@ -205,3 +206,4 @@ Current expected baseline is at least 63 unit tests. For MCP changes, also run `
 - Product availability differs by account; preserve exact product/tool error identity.
 - Relevance metrics depend on judgment coverage; low-coverage Precision@K must be reported with judged precision/coverage.
 - Project graph quality bounds report quality; do not silently replace project ontology with generic output.
+- Never render `暂无 L5 节点` cards or an empty graph page in a professional industry-chain report.

@@ -1076,4 +1076,19 @@ python industry-chain-processing/scripts/link_enterprises.py \
   --page-size 5
 ```
 
+### 9. 报告中的产业链图谱为空
+
+新版会在生成阶段校验 L2/L3/L5：每个展示的 L2 必须包含 L3，每个 L3 必须包含 L5。项目图谱为空时会自动使用价值链数据或标准产业层级回退；仍无法形成有效节点时会终止生成，不会输出空图谱报告。
+
+如果输入的是旧版 JSON，请重新执行组合步骤后再渲染：
+
+```bash
+python industry-chain-processing/scripts/compose_industry_report.py \
+  --chain "目标产业" \
+  --output output/industry-chain-analysis.json
+python industry-chain-processing/scripts/render_report.py \
+  --input output/industry-chain-analysis.json \
+  --output output/industry-chain-analysis.html
+```
+
 贡献说明见 [CONTRIBUTING.md](CONTRIBUTING.md)，安全问题处理方式见 [SECURITY.md](SECURITY.md)。

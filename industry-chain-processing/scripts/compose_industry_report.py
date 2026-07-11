@@ -94,16 +94,37 @@ def parse_path(value: str | None, chain: str, node: str) -> List[str]:
 
 def build_value_chain(chain: str, node: str, path: List[str]) -> List[Dict[str, Any]]:
     """Fallback value-chain rows when project graph is unavailable."""
-    upstream = "关键零部件、核心材料、软硬件基础设施、研发工具链"
-    core = node or (path[-1] if path else "核心产品/技术/服务环节")
-    downstream = "系统集成、场景运营、终端客户与应用项目"
+    focus = node or (path[-1] if len(path) > 1 else "") or f"{chain}核心产品"
+    upstream_modules = ["核心材料与关键零部件", "研发工具与基础设施"]
+    upstream_nodes = ["核心材料", "关键零部件", "基础软件", "研发工具链"]
+    core_modules = ["核心产品与关键技术", "系统平台与解决方案"]
+    core_nodes = unique_nonempty([focus, f"{focus}关键技术", f"{focus}系统平台", f"{focus}解决方案"], limit=6)
+    downstream_modules = ["系统集成与场景应用", "运营服务与终端市场"]
+    downstream_nodes = ["系统集成服务", "行业应用方案", "运营服务", "终端产品与项目"]
     if "汽车" in chain or "自动驾驶" in node:
-        upstream = "车规芯片、传感器、域控/计算平台、地图定位、仿真测试与数据闭环"
-        downstream = "整车厂、Robotaxi/Robobus、干线物流、园区港口矿山、智能网联示范区"
+        upstream_modules = ["车规芯片与传感器", "计算平台与测试工具"]
+        upstream_nodes = ["车规芯片", "环境感知传感器", "域控与计算平台", "地图定位", "仿真测试", "数据闭环工具"]
+        downstream_modules = ["整车与系统集成", "出行物流与示范应用"]
+        downstream_nodes = ["智能整车", "Robotaxi/Robobus", "干线物流", "园区港口矿山", "智能网联示范区"]
+
+    def row(segment: str, modules: List[str], nodes: List[str], analysis: str) -> Dict[str, Any]:
+        clean_modules = unique_nonempty(modules, limit=8)
+        clean_nodes = unique_nonempty(nodes, limit=12)
+        return {
+            "segment": segment,
+            "l2_segment": segment,
+            "role": "、".join(clean_modules),
+            "l3_segments": "、".join(clean_modules),
+            "l5_samples": "、".join(clean_nodes),
+            "l3_count": len(clean_modules),
+            "l5_count": len(clean_nodes),
+            "analysis": analysis,
+        }
+
     return [
-        {"segment": "上游支撑", "role": upstream, "analysis": "分析核心投入、技术门槛、国产替代空间和供应约束。"},
-        {"segment": "核心环节", "role": core, "analysis": "分析产品/技术边界、产业价值位置、关键能力和与相邻环节的接口关系。"},
-        {"segment": "下游应用", "role": downstream, "analysis": "分析商业化场景、需求来源、项目落地路径和生态协同关系。"},
+        row("上游：基础要素与核心支撑", upstream_modules, upstream_nodes, "分析核心投入、技术门槛、国产替代空间和供应约束。"),
+        row("中游：核心产品与系统集成", core_modules, core_nodes, "分析产品/技术边界、产业价值位置、关键能力和与相邻环节的接口关系。"),
+        row("下游：场景应用与运营服务", downstream_modules, downstream_nodes, "分析商业化场景、需求来源、项目落地路径和生态协同关系。"),
     ]
 
 
@@ -166,7 +187,7 @@ def project_graph_tree(project: Mapping[str, Any], chain: str) -> Dict[str, Any]
         path = [str(part) for part in (item.get("path") or []) if str(part or "").strip()]
         if len(path) < 4:
             continue
-        _, l2, l3, l5 = path[:4]
+        l2, l3, l5 = path[1], path[2], path[-1]
         if not l2 or not l3 or not l5:
             continue
         section = l2_index.get(l2)
@@ -180,23 +201,72 @@ def project_graph_tree(project: Mapping[str, Any], chain: str) -> Dict[str, Any]
             subsection = {"name": l3, "children": []}
             l3_index[sub_key] = subsection
             section["children"].append(subsection)
-        subsection["children"].append({"name": l5})
+        if not any(str(child.get("name") or "") == l5 for child in subsection["children"]):
+            subsection["children"].append({"name": l5})
 
     if not sections:
         for item in project.get("value_chain") or []:
             l2 = str(item.get("l2_segment") or item.get("segment") or "").strip()
             if not l2:
                 continue
-            l3_names = [part.strip() for part in str(item.get("l3_segments") or "").split("、") if part.strip()]
-            l5_names = [part.strip() for part in str(item.get("l5_samples") or "").split("、") if part.strip()]
-            children = []
-            if l3_names:
-                for index, l3 in enumerate(l3_names):
-                    children.append({"name": l3, "children": [{"name": name} for name in l5_names[index:index + 3]]})
-            else:
-                children.append({"name": "核心节点", "children": [{"name": name} for name in l5_names]})
+            l3_names = split_names(item.get("l3_segments") or item.get("role"), limit=10)
+            l5_names = split_names(item.get("l5_samples"), limit=20)
+            if not l3_names:
+                l3_names = ["核心产品与技术"]
+            if not l5_names:
+                l5_names = [f"{name}代表产品与技术" for name in l3_names]
+            grouped: List[List[str]] = [[] for _ in l3_names]
+            for index, name in enumerate(l5_names):
+                grouped[index % len(grouped)].append(name)
+            children = [
+                {
+                    "name": l3,
+                    "children": [{"name": name} for name in (grouped[index] or [f"{l3}代表产品与技术"])],
+                }
+                for index, l3 in enumerate(l3_names)
+            ]
             sections.append({"name": l2, "children": children})
     return {"name": chain, "children": sections}
+
+
+def graph_tree_stats(tree: Mapping[str, Any]) -> Dict[str, int]:
+    l2_count = 0
+    l3_count = 0
+    l5_count = 0
+    for l2 in as_list(tree.get("children")):
+        if not isinstance(l2, Mapping) or not str(l2.get("name") or "").strip():
+            continue
+        l2_count += 1
+        for l3 in as_list(l2.get("children")):
+            if not isinstance(l3, Mapping) or not str(l3.get("name") or "").strip():
+                continue
+            l3_count += 1
+            l5_count += sum(
+                1
+                for l5 in as_list(l3.get("children"))
+                if isinstance(l5, Mapping) and str(l5.get("name") or "").strip()
+            )
+    return {"l2": l2_count, "l3": l3_count, "l5": l5_count}
+
+
+def graph_tree_is_complete(tree: Mapping[str, Any]) -> bool:
+    sections = [item for item in as_list(tree.get("children")) if isinstance(item, Mapping)]
+    if not sections:
+        return False
+    for section in sections:
+        if not str(section.get("name") or "").strip():
+            return False
+        modules = [item for item in as_list(section.get("children")) if isinstance(item, Mapping)]
+        if not modules:
+            return False
+        for module in modules:
+            if not str(module.get("name") or "").strip():
+                return False
+            leaves = [item for item in as_list(module.get("children")) if isinstance(item, Mapping) and str(item.get("name") or "").strip()]
+            if not leaves:
+                return False
+    stats = graph_tree_stats(tree)
+    return stats["l2"] > 0 and stats["l3"] > 0 and stats["l5"] > 0
 
 
 def level_definition_rows(canonical_chain: str, node: str, graph_summary: Mapping[str, Any]) -> List[Dict[str, Any]]:
@@ -622,8 +692,25 @@ def build_payload(
     project_value_chain = (project.get("value_chain") or []) if project_available else []
     graph_tree = project_graph_tree(project, canonical_chain) if project_available else {}
     value_chain = project_value_chain or build_value_chain(canonical_chain, node, path)
-    if not graph_tree:
+    graph_source = "project_graph"
+    if not graph_tree_is_complete(graph_tree):
         graph_tree = project_graph_tree({"value_chain": value_chain}, canonical_chain)
+        graph_source = "value_chain_reconstruction"
+    if not graph_tree_is_complete(graph_tree):
+        value_chain = build_value_chain(canonical_chain, node, path)
+        graph_tree = project_graph_tree({"value_chain": value_chain}, canonical_chain)
+        graph_source = "generated_fallback"
+    if not graph_tree_is_complete(graph_tree):
+        raise ValueError(f"产业链图谱构建失败：{canonical_chain} 未形成有效的 L2/L3/L5 节点")
+    actual_graph_stats = graph_tree_stats(graph_tree)
+    graph_summary = {
+        **graph_summary,
+        "l2_count": actual_graph_stats["l2"],
+        "l3_count": actual_graph_stats["l3"],
+        "l5_count": actual_graph_stats["l5"],
+        "graph_source": graph_source,
+        "graph_validation": "complete",
+    }
     market_context = market_context or []
     node_records = project_node_rows({**project, "matched_nodes": mapped_nodes}) if mapped_nodes else []
     condition = data.get("condition") if isinstance(data.get("condition"), dict) else {}
@@ -659,9 +746,9 @@ def build_payload(
         "summary": summary,
         "executive_summary": [
             f"分析对象：{canonical_chain}{(' / ' + node) if node else ''}。",
-            f"研究资料：纳入 {len(market_context)} 项政策、市场或技术信息。" if market_context else "研究资料：以项目产业图谱与标准节点记录为基础。",
+            f"研究资料：纳入 {len(market_context)} 项政策、市场或技术信息。" if market_context else "研究基础：产业链层级结构与标准产品技术节点。",
             "图谱层级：L1/L2/L3/L5；当前项目多数图谱未单独落 L4。",
-            f"项目节点规模：L2 {graph_summary.get('l2_count', '未知')}、L3 {graph_summary.get('l3_count', '未知')}、L5 {graph_summary.get('l5_count', '未知')}。" if graph_summary else "结构基础：采用产业层级分析框架。",
+            f"图谱节点规模：L2 {graph_summary.get('l2_count', '未知')}、L3 {graph_summary.get('l3_count', '未知')}、L5 {graph_summary.get('l5_count', '未知')}。" if graph_summary else "结构基础：采用产业层级分析框架。",
             f"核心分析词：{'、'.join(dict.fromkeys(keywords)) or canonical_chain}。",
         ],
         "industry_overview": {
@@ -707,17 +794,20 @@ def main() -> None:
     if not (args.chain or data.get("chain") or data.get("industry") or data.get("industry_chain")):
         raise SystemExit("请提供 --chain，或通过 --input 传入包含 chain/industry 的 JSON")
 
-    payload = build_payload(
-        data,
-        args.title,
-        chain_arg=args.chain,
-        node_arg=args.node,
-        path_arg=args.path,
-        project_root=args.project_root,
-        project_chain=args.project_chain,
-        project_node=args.project_node,
-        market_context=load_market_context(args.market_context, args.market_note),
-    )
+    try:
+        payload = build_payload(
+            data,
+            args.title,
+            chain_arg=args.chain,
+            node_arg=args.node,
+            path_arg=args.path,
+            project_root=args.project_root,
+            project_chain=args.project_chain,
+            project_node=args.project_node,
+            market_context=load_market_context(args.market_context, args.market_note),
+        )
+    except ValueError as exc:
+        raise SystemExit(f"报告生成失败：{exc}") from exc
     if args.output:
         output = Path(args.output).expanduser()
         output.parent.mkdir(parents=True, exist_ok=True)

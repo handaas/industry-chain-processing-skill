@@ -284,11 +284,40 @@ def render_generic_table(rows: Sequence[Any]) -> str:
     return render_table(normalized, table_columns_from_rows(normalized)) if normalized else "<p class=\"muted\">暂无</p>"
 
 
+def prune_graph_tree(tree: Mapping[str, Any], chain: str) -> Dict[str, Any]:
+    sections: List[Dict[str, Any]] = []
+    for section in as_list(tree.get("children")):
+        if not isinstance(section, Mapping):
+            continue
+        section_name = str(section.get("name") or "").strip()
+        if not section_name:
+            continue
+        modules: List[Dict[str, Any]] = []
+        for module in as_list(section.get("children")):
+            if not isinstance(module, Mapping):
+                continue
+            module_name = str(module.get("name") or "").strip()
+            if not module_name:
+                continue
+            leaves = [
+                {"name": str(leaf.get("name") or "").strip()}
+                for leaf in as_list(module.get("children"))
+                if isinstance(leaf, Mapping) and str(leaf.get("name") or "").strip()
+            ]
+            if leaves:
+                modules.append({"name": module_name, "children": leaves})
+        if modules:
+            sections.append({"name": section_name, "children": modules})
+    return {"name": str(tree.get("name") or chain), "children": sections} if sections else {}
+
+
 def normalize_graph_tree(data: Mapping[str, Any]) -> Dict[str, Any]:
-    tree = data.get("project_graph_tree")
-    if isinstance(tree, dict) and tree.get("children"):
-        return tree
     chain = str(data.get("chain") or data.get("industry") or "产业链")
+    tree = data.get("project_graph_tree")
+    if isinstance(tree, Mapping):
+        normalized = prune_graph_tree(tree, chain)
+        if normalized:
+            return normalized
     sections: List[Dict[str, Any]] = []
     for item in as_list(data.get("project_value_chain") or data.get("value_chain")):
         if not isinstance(item, dict):
@@ -298,14 +327,19 @@ def normalize_graph_tree(data: Mapping[str, Any]) -> Dict[str, Any]:
             continue
         l3_names = [part.strip() for part in str(item.get("l3_segments") or item.get("role") or "").split("、") if part.strip()]
         l5_names = [part.strip() for part in str(item.get("l5_samples") or "").split("、") if part.strip()]
-        children: List[Dict[str, Any]] = []
-        if l3_names:
-            for index, l3 in enumerate(l3_names):
-                children.append({"name": l3, "children": [{"name": name} for name in l5_names[index:index + 4]]})
-        elif l5_names:
-            children.append({"name": "核心节点", "children": [{"name": name} for name in l5_names]})
+        if not l3_names:
+            l3_names = ["核心产品与技术"]
+        if not l5_names:
+            l5_names = [f"{name}代表产品与技术" for name in l3_names]
+        groups: List[List[str]] = [[] for _ in l3_names]
+        for index, name in enumerate(l5_names):
+            groups[index % len(groups)].append(name)
+        children = [
+            {"name": l3, "children": [{"name": name} for name in (groups[index] or [f"{l3}代表产品与技术"])]}
+            for index, l3 in enumerate(l3_names)
+        ]
         sections.append({"name": l2, "children": children})
-    return {"name": chain, "children": sections} if sections else {}
+    return prune_graph_tree({"name": chain, "children": sections}, chain)
 
 
 def graph_stats(tree: Mapping[str, Any]) -> Dict[str, int]:
@@ -323,11 +357,39 @@ def graph_stats(tree: Mapping[str, Any]) -> Dict[str, int]:
     return {"l2": l2, "l3": l3, "l5": l5}
 
 
+def graph_tree_is_complete(tree: Mapping[str, Any]) -> bool:
+    stats = graph_stats(tree)
+    return stats["l2"] > 0 and stats["l3"] > 0 and stats["l5"] > 0
+
+
+def graph_rows(tree: Mapping[str, Any]) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    for section in as_list(tree.get("children")):
+        if not isinstance(section, Mapping):
+            continue
+        for module in as_list(section.get("children")):
+            if not isinstance(module, Mapping):
+                continue
+            leaves = [
+                str(leaf.get("name") or "").strip()
+                for leaf in as_list(module.get("children"))
+                if isinstance(leaf, Mapping) and str(leaf.get("name") or "").strip()
+            ]
+            if leaves:
+                rows.append({
+                    "l2_segment": section.get("name"),
+                    "l3_module": module.get("name"),
+                    "l5_nodes": "、".join(leaves),
+                    "l5_count": len(leaves),
+                })
+    return rows
+
+
 def render_project_graph_html(data: Mapping[str, Any]) -> str:
     tree = normalize_graph_tree(data)
     sections = [item for item in as_list(tree.get("children")) if isinstance(item, dict)]
-    if not sections:
-        return ""
+    if not sections or not graph_tree_is_complete(tree):
+        raise ValueError("产业链图谱为空或缺少 L2/L3/L5 节点，已拒绝生成空图谱报告")
     stats = graph_stats(tree)
     chain = str(tree.get("name") or data.get("chain") or "产业链")
     column_count = 2 if len(sections) > 1 else 1
@@ -354,7 +416,7 @@ def render_project_graph_html(data: Mapping[str, Any]) -> str:
             leaf_html = "".join(
                 f'<div class="graph-l5" title="{esc(leaf.get("name"))}"><span>{esc(leaf.get("name"))}</span></div>'
                 for leaf in leaves
-            ) or '<p class="graph-empty">暂无 L5 节点</p>'
+            )
             l3_html.append(f"""
                 <article class="graph-l3 graph-l3-{theme}">
                   <div class="graph-l3-head">
@@ -532,7 +594,7 @@ def render_chain_analysis_html(data: Dict[str, Any], title: str) -> str:
     summary = first_present(data, ["abstract", "summary", "overview"], "")
     chain = str(data.get("chain") or data.get("industry") or "产业链")
     node = str(data.get("node") or "全产业链")
-    graph_summary = data.get("project_graph_summary") if isinstance(data.get("project_graph_summary"), dict) else {}
+    graph_summary = dict(data.get("project_graph_summary")) if isinstance(data.get("project_graph_summary"), dict) else {}
     industry_definition = [item for item in as_list(data.get("industry_definition")) if isinstance(item, dict)]
     level_definitions = as_list(data.get("level_definitions"))
     segment_rows = [item for item in as_list(data.get("segment_analysis")) if isinstance(item, dict)]
@@ -540,7 +602,12 @@ def render_chain_analysis_html(data: Dict[str, Any], title: str) -> str:
     value_flow_rows = [item for item in as_list(data.get("value_flow")) if isinstance(item, dict)]
     structural_rows = [item for item in as_list(data.get("structural_characteristics")) if isinstance(item, dict)]
     market_context = [item for item in as_list(data.get("market_context")) if isinstance(item, dict)]
-    graph_html = render_project_graph_html(data)
+    normalized_tree = normalize_graph_tree(data)
+    if not graph_tree_is_complete(normalized_tree):
+        raise ValueError("产业链图谱为空或缺少 L2/L3/L5 节点，已拒绝生成空图谱报告")
+    actual_stats = graph_stats(normalized_tree)
+    graph_summary.update({"l2_count": actual_stats["l2"], "l3_count": actual_stats["l3"], "l5_count": actual_stats["l5"]})
+    graph_html = render_project_graph_html({**data, "project_graph_tree": normalized_tree})
     definition_columns = [("dimension", "定义维度"), ("content", "本报告界定")]
     level_columns = [("level", "层级"), ("name", "层级名称"), ("definition", "定义口径"), ("granularity", "颗粒度"), ("this_report", "本报告口径"), ("usage", "使用说明")]
     market_columns = [("topic", "主题"), ("finding", "产业背景要点"), ("source", "来源"), ("date", "日期"), ("url", "链接")]
@@ -1519,7 +1586,13 @@ def md_professional_sections(data: Mapping[str, Any]) -> str:
 def render_chain_analysis_markdown(data: Dict[str, Any], title: str) -> str:
     generated_at = dt.datetime.now().strftime("%Y-%m-%d")
     summary = first_present(data, ["abstract", "summary", "overview"], "")
-    graph_summary = data.get("project_graph_summary") if isinstance(data.get("project_graph_summary"), dict) else {}
+    graph_summary = dict(data.get("project_graph_summary")) if isinstance(data.get("project_graph_summary"), dict) else {}
+    normalized_tree = normalize_graph_tree(data)
+    if not graph_tree_is_complete(normalized_tree):
+        raise ValueError("产业链图谱为空或缺少 L2/L3/L5 节点，已拒绝生成空图谱报告")
+    actual_stats = graph_stats(normalized_tree)
+    graph_summary.update({"l2_count": actual_stats["l2"], "l3_count": actual_stats["l3"], "l5_count": actual_stats["l5"]})
+    graph_detail_rows = graph_rows(normalized_tree)
     market_context = [item for item in as_list(data.get("market_context")) if isinstance(item, dict)]
     industry_definition = [item for item in as_list(data.get("industry_definition")) if isinstance(item, dict)]
     segment_rows = [item for item in as_list(data.get("segment_analysis")) if isinstance(item, dict)]
@@ -1529,7 +1602,7 @@ def render_chain_analysis_markdown(data: Dict[str, Any], title: str) -> str:
     definition_columns = [("dimension", "定义维度"), ("content", "本报告界定")]
     level_columns = [("level", "层级"), ("name", "层级名称"), ("definition", "定义口径"), ("granularity", "颗粒度"), ("this_report", "本报告口径"), ("usage", "使用说明")]
     market_columns = [("topic", "主题"), ("finding", "产业背景要点"), ("source", "来源"), ("date", "日期"), ("url", "链接")]
-    graph_columns = [("stage", "价值阶段"), ("segment", "L2 价值环节"), ("composition", "L3 产业模块"), ("scale", "节点规模")]
+    graph_columns = [("l2_segment", "L2 价值环节"), ("l3_module", "L3 产业模块"), ("l5_nodes", "L5 产品技术节点"), ("l5_count", "L5 数量")]
     segment_columns = [("segment", "价值环节"), ("functional_positioning", "功能定位"), ("composition", "产业模块"), ("representative_nodes", "代表性节点"), ("linkage", "上下游关系")]
     key_node_columns = [("l2_segment", "L2 价值环节"), ("l3_module", "L3 产业模块"), ("node_count", "L5 数量"), ("capability_boundary", "能力边界"), ("representative_nodes", "代表性 L5 节点")]
     flow_columns = [("from_segment", "起始环节"), ("to_segment", "承接环节"), ("relationship", "关系类型"), ("transmission_content", "传导内容"), ("transmission_logic", "传导机制")]
@@ -1565,7 +1638,7 @@ def render_chain_analysis_markdown(data: Dict[str, Any], title: str) -> str:
     sections.extend([
         "",
         f"## {next_heading('产业链全景图谱')}",
-        md_table(segment_rows, graph_columns),
+        md_table(graph_detail_rows, graph_columns),
         "",
         f"## {next_heading('价值环节深度解析')}",
         md_table(segment_rows, segment_columns),
@@ -1877,7 +1950,11 @@ def main() -> None:
 
     data = load_payload(args.input)
     title = infer_title(data, args.title)
-    print(json_dumps(write_report(data, args.output, fmt=args.format, title=title), pretty=True))
+    try:
+        result = write_report(data, args.output, fmt=args.format, title=title)
+    except ValueError as exc:
+        raise SystemExit(f"报告生成失败：{exc}") from exc
+    print(json_dumps(result, pretty=True))
 
 
 if __name__ == "__main__":

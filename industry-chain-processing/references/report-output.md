@@ -201,10 +201,10 @@ python scripts/policy_analysis.py \
 7. Use `render_report.py` only when re-rendering an existing JSON artifact or converting it to another format:
 
 ```bash
-python scripts/render_report.py --input /tmp/industry-chain-analysis.json --output /tmp/industry-chain-analysis.html
-python scripts/render_report.py --input /tmp/industry-chain-analysis.json --output /tmp/industry-chain-analysis.md
-python scripts/render_report.py --input /tmp/enterprise-chain-positioning.json --output /tmp/enterprise-chain-positioning.html
-python scripts/render_report.py --input /tmp/policy-analysis.json --output /tmp/policy-analysis.html
+python scripts/render_report.py --input output/industry-chain-analysis.json --output output/industry-chain-analysis.html
+python scripts/render_report.py --input output/industry-chain-analysis.json --output output/industry-chain-analysis.md
+python scripts/render_report.py --input output/enterprise-chain-positioning.json --output output/enterprise-chain-positioning.html
+python scripts/render_report.py --input output/policy-analysis.json --output output/policy-analysis.html
 ```
 
 8. Return the JSON path and direct report path, plus canonical chain/node mapping, enterprise positioning summary, linking coverage, or policy query/region summary depending on report type.
@@ -214,6 +214,7 @@ python scripts/render_report.py --input /tmp/policy-analysis.json --output /tmp/
 - The report should be readable without Codex context.
 - Keep implementation details out of the main report unless the user asks.
 - Professional industry-chain analysis reports must be commercial deliverables with the fixed eight-part structure: summary, definition and hierarchy, development environment, graph, segment analysis, node system, value flow, and structural characteristics.
+- Empty graphs are forbidden. The composed payload must have L2 > 0, L3 > 0, and L5 > 0; every rendered L2 must contain at least one L3 and every rendered L3 must contain at least one L5. Repair from value-chain/fallback ontology before rendering, or fail without writing the report.
 - HTML reports should use a research-report visual style: A4-like white pages, grey striped top rule, blue report banner, left cover sidebar with catalogue/scope, navy section headings, dark-blue table headers, light-blue zebra rows, and print-friendly page breaks.
 - The report abstract must synthesize project graph structure and, when available, web-collected industry context; it should read like a professional industry-chain analysis abstract, not a generic execution summary.
 - Visible report prose must never expose collection or generation workflow language such as “联网收集”, “用于增强摘要/分析口径”, “未传入资料”, “Skill 生成”, input parameters, tool names, or internal workflow decisions. State the policy environment, market evolution, technology route, evidence source, and analytical finding directly.

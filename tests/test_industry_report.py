@@ -1,6 +1,7 @@
 import pathlib
 import sys
 import unittest
+from unittest import mock
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -12,6 +13,71 @@ import render_report  # noqa: E402
 
 
 class IndustryReportTests(unittest.TestCase):
+    def assert_complete_graph(self, tree):
+        self.assertTrue(compose_industry_report.graph_tree_is_complete(tree))
+        stats = compose_industry_report.graph_tree_stats(tree)
+        self.assertGreater(stats["l2"], 0)
+        self.assertGreater(stats["l3"], 0)
+        self.assertGreater(stats["l5"], 0)
+        for section in tree["children"]:
+            self.assertTrue(section["children"])
+            for module in section["children"]:
+                self.assertTrue(module["children"])
+
+    def test_fallback_report_always_builds_nonempty_l2_l3_l5_graph(self):
+        with mock.patch.object(compose_industry_report, "build_project_context", return_value={"available": False}):
+            payload = compose_industry_report.build_payload(
+                {},
+                chain_arg="生物制药",
+                node_arg="抗体药物",
+            )
+        self.assert_complete_graph(payload["project_graph_tree"])
+        self.assertEqual(payload["project_graph_summary"]["graph_validation"], "complete")
+        self.assertGreater(payload["project_graph_summary"]["l5_count"], 0)
+        html = render_report.render_chain_analysis_html(payload, payload["title"])
+        self.assertIn("抗体药物", html)
+        self.assertNotIn("暂无 L5 节点", html)
+
+    def test_available_but_empty_project_graph_is_repaired_before_rendering(self):
+        empty_project = {
+            "available": True,
+            "chain": {"name": "空图谱产业", "id": "empty"},
+            "stats": {"l2": 0, "l3": 0, "l5": 0},
+            "value_chain": [],
+            "l5_nodes": [],
+            "matched_nodes": [],
+        }
+        with mock.patch.object(compose_industry_report, "build_project_context", return_value=empty_project):
+            payload = compose_industry_report.build_payload({}, chain_arg="空图谱产业", node_arg="核心设备")
+        self.assert_complete_graph(payload["project_graph_tree"])
+        self.assertGreaterEqual(payload["project_graph_summary"]["l2_count"], 3)
+        self.assertGreater(payload["project_graph_summary"]["l5_count"], 0)
+
+    def test_renderer_rejects_unrepairable_empty_industry_graph(self):
+        payload = {
+            "report_type": "industry_chain_analysis",
+            "title": "空图谱报告",
+            "chain": "空图谱产业",
+            "project_graph_tree": {"name": "空图谱产业", "children": []},
+            "value_chain": [],
+        }
+        with self.assertRaisesRegex(ValueError, "拒绝生成空图谱报告"):
+            render_report.render_chain_analysis_html(payload, payload["title"])
+        with self.assertRaisesRegex(ValueError, "拒绝生成空图谱报告"):
+            render_report.render_chain_analysis_markdown(payload, payload["title"])
+
+    def test_optional_l4_path_keeps_last_item_as_l5(self):
+        tree = compose_industry_report.project_graph_tree(
+            {
+                "l5_nodes": [{
+                    "path": ["智能制造", "中游", "工业软件", "生产管理", "制造执行系统"],
+                }]
+            },
+            "智能制造",
+        )
+        self.assert_complete_graph(tree)
+        self.assertEqual(tree["children"][0]["children"][0]["children"][0]["name"], "制造执行系统")
+
     def test_professional_summary_uses_graph_and_external_context(self):
         summary = compose_industry_report.build_professional_summary(
             "智能网联汽车",
@@ -151,10 +217,10 @@ class IndustryReportTests(unittest.TestCase):
             "project_graph_tree": {
                 "name": "智能制造",
                 "children": [
-                    {"name": "上游", "children": []},
-                    {"name": "中游", "children": []},
-                    {"name": "下游", "children": []},
-                    {"name": "应用", "children": []},
+                    {"name": "上游", "children": [{"name": "基础部件", "children": [{"name": "工业芯片"}]}]},
+                    {"name": "中游", "children": [{"name": "智能装备", "children": [{"name": "工业机器人"}]}]},
+                    {"name": "下游", "children": [{"name": "系统集成", "children": [{"name": "智能工厂"}]}]},
+                    {"name": "应用", "children": [{"name": "行业场景", "children": [{"name": "数字化车间"}]}]},
                 ],
             },
         }
