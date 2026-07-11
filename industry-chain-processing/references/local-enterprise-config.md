@@ -4,6 +4,8 @@
 
 The skill treats `industry-chain-mcp-server` as a data-access MCP service. The MCP service exposes HandaaS existing interface wrappers only; the skill keeps industry-chain decomposition, keyword strategy, evidence scoring, and link recommendations in local scripts.
 
+Official project and deployment guide: [handaas/industry-chain-mcp-server](https://github.com/handaas/industry-chain-mcp-server). Open that README for local installation, environment variables, MCP client examples, and the current tool inventory.
+
 ### Option A: official Remote MCP
 
 After creating the `industry-chain-mcp-server` service on the platform, set either the token or the full URL:

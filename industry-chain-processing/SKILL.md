@@ -25,6 +25,14 @@ When this skill is active:
 12. Professional industry-chain reports must follow the fixed research structure: 报告摘要 -> 产业定义与层级口径 -> 产业发展环境 -> 产业链全景图谱 -> 价值环节深度解析 -> 关键节点与产品技术体系 -> 价值传导与协同关系 -> 产业结构特征. Omit only the development-environment chapter when no authoritative evidence is available; do not replace these chapters with generic priority cards or execution summaries.
 13. Enterprise-chain positioning, specified enterprise-node analysis, single-node enterprise linking, and whole-chain node linking must produce a standalone HTML or Markdown report in addition to structured JSON unless the user explicitly requests JSON only. Use each script's `--report-output`; do not require a second manual rendering step.
 
+## MCP service entry
+
+- Official project: [handaas/industry-chain-mcp-server](https://github.com/handaas/industry-chain-mcp-server).
+- Open the MCP project README when the user needs local deployment, environment variables, client configuration, tool inventory, or troubleshooting.
+- For Remote MCP, prefer the platform-issued token or complete MCP URL; do not require cloning the MCP repository.
+- For local MCP, guide the user to clone the official project above, copy `.env.example` to `.env`, start `streamable-http`, and set `INDUSTRY_CHAIN_MCP_URL` to the local `/mcp` endpoint.
+- After either setup path, run `scripts/mcp_client.py ping` and `scripts/mcp_client.py list-tools` before the first real query.
+
 ## Load references only when needed
 
 - Broad industry analysis or enterprise discovery: `references/analysis-playbook.md`.

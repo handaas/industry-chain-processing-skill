@@ -144,6 +144,8 @@ ln -sfn "$(pwd)/industry-chain-processing-skill/industry-chain-processing" \
 
 `industry-chain-mcp-server` 是数据接入层。它的可用工具应当都是 HandaaS 已有接口封装，例如企业关键词搜索、企业基础信息、供应链下游企业、专利、招投标和高级筛选；产业链分析流程不放在 MCP 工具里，而由本 Skill 的脚本完成。
 
+MCP 项目地址：**[handaas/industry-chain-mcp-server](https://github.com/handaas/industry-chain-mcp-server)**。本地部署、环境变量、客户端配置和完整工具说明请直接进入该项目查看 README。
+
 如果你的 Python 环境还没有 MCP 客户端依赖，先安装：
 
 ```bash
