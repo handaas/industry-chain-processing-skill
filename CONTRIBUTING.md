@@ -1,5 +1,7 @@
 # Contributing
 
+Codex and other coding agents must read [AGENTS.md](AGENTS.md) before changing ontology rules, MCP integration, ES conditions, evidence scoring, reports, or documentation.
+
 ## Development setup
 
 Most scripts use only the Python standard library. Install optional MCP
