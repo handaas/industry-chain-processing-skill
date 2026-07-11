@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "description": "Known enterprise-node positive and adjacent-negative cases for HandaaS business evidence ablation.",
+  "cases": [
+    {
+      "enterprise": "深圳市汇川技术股份有限公司",
+      "chain": "工业母机",
+      "node": "伺服驱动器",
+      "path": ["工业母机", "上游：核心零部件与基础材料", "伺服系统", "伺服驱动器"],
+      "expected": "positive",
+      "rationale": "工业自动化与伺服驱动产品企业"
+    },
+    {
+      "enterprise": "清能德创电气技术(北京)有限公司",
+      "chain": "工业母机",
+      "node": "伺服驱动器",
+      "path": ["工业母机", "上游：核心零部件与基础材料", "伺服系统", "伺服驱动器"],
+      "expected": "positive",
+      "rationale": "伺服驱动与运动控制产品企业"
+    },
+    {
+      "enterprise": "超同步股份有限公司",
+      "chain": "工业母机",
+      "node": "伺服驱动器",
+      "path": ["工业母机", "上游：核心零部件与基础材料", "伺服系统", "伺服驱动器"],
+      "expected": "positive",
+      "rationale": "伺服及数控相关产品企业"
+    },
+    {
+      "enterprise": "三一重工股份有限公司",
+      "chain": "工业母机",
+      "node": "伺服驱动器",
+      "path": ["工业母机", "上游：核心零部件与基础材料", "伺服系统", "伺服驱动器"],
+      "expected": "negative",
+      "rationale": "工程机械整机企业，不应仅因自动化应用挂到伺服驱动器产品节点"
+    },
+    {
+      "enterprise": "广东普拉迪科技股份有限公司",
+      "chain": "工业母机",
+      "node": "伺服驱动器",
+      "path": ["工业母机", "上游：核心零部件与基础材料", "伺服系统", "伺服驱动器"],
+      "expected": "negative",
+      "rationale": "机床整机企业，不等同于伺服驱动器制造商"
+    },
+    {
+      "enterprise": "广东普拉迪科技股份有限公司",
+      "chain": "工业母机",
+      "node": "加工中心（立式、卧式、龙门）",
+      "path": ["工业母机", "中游：机床设备", "金属切削机床", "加工中心（立式、卧式、龙门）"],
+      "expected": "positive",
+      "rationale": "加工中心与数控机床企业"
+    },
+    {
+      "enterprise": "上海拓璞数控科技股份有限公司",
+      "chain": "工业母机",
+      "node": "加工中心（立式、卧式、龙门）",
+      "path": ["工业母机", "中游：机床设备", "金属切削机床", "加工中心（立式、卧式、龙门）"],
+      "expected": "positive",
+      "rationale": "高端数控装备与加工中心企业"
+    },
+    {
+      "enterprise": "安阳鑫盛机床股份有限公司",
+      "chain": "工业母机",
+      "node": "加工中心（立式、卧式、龙门）",
+      "path": ["工业母机", "中游：机床设备", "金属切削机床", "加工中心（立式、卧式、龙门）"],
+      "expected": "positive",
+      "rationale": "数控机床及加工中心企业"
+    },
+    {
+      "enterprise": "深圳市汇川技术股份有限公司",
+      "chain": "工业母机",
+      "node": "加工中心（立式、卧式、龙门）",
+      "path": ["工业母机", "中游：机床设备", "金属切削机床", "加工中心（立式、卧式、龙门）"],
+      "expected": "negative",
+      "rationale": "提供控制与驱动产品，不等同于加工中心整机制造商"
+    },
+    {
+      "enterprise": "江苏恒立液压股份有限公司",
+      "chain": "工业母机",
+      "node": "加工中心（立式、卧式、龙门）",
+      "path": ["工业母机", "中游：机床设备", "金属切削机床", "加工中心（立式、卧式、龙门）"],
+      "expected": "negative",
+      "rationale": "液压部件企业，不属于加工中心整机节点"
+    },
+    {
+      "enterprise": "三一重工股份有限公司",
+      "chain": "工业母机",
+      "node": "挖掘机",
+      "path": ["工业母机", "下游：应用领域", "工程机械", "挖掘机"],
+      "expected": "positive",
+      "rationale": "挖掘机整机企业"
+    },
+    {
+      "enterprise": "广西柳工机械股份有限公司",
+      "chain": "工业母机",
+      "node": "挖掘机",
+      "path": ["工业母机", "下游：应用领域", "工程机械", "挖掘机"],
+      "expected": "positive",
+      "rationale": "挖掘机整机企业"
+    },
+    {
+      "enterprise": "中联重科股份有限公司",
+      "chain": "工业母机",
+      "node": "挖掘机",
+      "path": ["工业母机", "下游：应用领域", "工程机械", "挖掘机"],
+      "expected": "positive",
+      "rationale": "工程机械及挖掘机整机企业"
+    },
+    {
+      "enterprise": "江苏恒立液压股份有限公司",
+      "chain": "工业母机",
+      "node": "挖掘机",
+      "path": ["工业母机", "下游：应用领域", "工程机械", "挖掘机"],
+      "expected": "negative",
+      "rationale": "挖掘机液压部件供应商，不属于挖掘机整机节点"
+    },
+    {
+      "enterprise": "深圳市汇川技术股份有限公司",
+      "chain": "工业母机",
+      "node": "挖掘机",
+      "path": ["工业母机", "下游：应用领域", "工程机械", "挖掘机"],
+      "expected": "negative",
+      "rationale": "工业自动化企业，不属于挖掘机整机节点"
+    }
+  ]
+}

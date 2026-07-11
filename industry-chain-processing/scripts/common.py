@@ -10,11 +10,12 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any, Dict, Iterable, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 SKILL_DIR = pathlib.Path(__file__).resolve().parents[1]
 EXAMPLE_CONFIG = SKILL_DIR / "assets" / "config.example.json"
 DEFAULT_CONFIG = pathlib.Path.home() / ".industry-chain-processing" / "handaas.config.json"
+DEFAULT_MCP_URL_TEMPLATE = "https://mcp.handaas.com/industry-chain/industry_chain?token={token}"
 SECRET_KEYWORDS = ("secret", "signature", "token", "api_key", "apikey", "password")
 
 
@@ -71,10 +72,29 @@ def is_placeholder(value: Any) -> bool:
         return True
     return (
         text.startswith("your_")
+        or "your_" in text
         or "_for_" in text
         or "example.com" in text
+        or "{token}" in text
+        or "your token" in text
         or text in {"todo", "replace_me", "changeme", "xxx"}
     )
+
+
+def redact_url(value: str) -> str:
+    if not any(marker in value.lower() for marker in ("token=", "signature=", "secret_id=", "secret_key=")):
+        return value
+    try:
+        parsed = urllib.parse.urlparse(value)
+        query = []
+        for key, item in urllib.parse.parse_qsl(parsed.query, keep_blank_values=True):
+            if key.lower() in {"token", "signature", "secret", "secret_id", "secret_key"}:
+                query.append((key, "REDACTED"))
+            else:
+                query.append((key, item))
+        return urllib.parse.urlunparse(parsed._replace(query=urllib.parse.urlencode(query)))
+    except Exception:
+        return value
 
 
 def redact(value: Any) -> Any:
@@ -89,7 +109,60 @@ def redact(value: Any) -> Any:
         return out
     if isinstance(value, list):
         return [redact(item) for item in value]
+    if isinstance(value, str):
+        return redact_url(value)
     return value
+
+
+def build_mcp_url(url: Optional[str] = None, token: Optional[str] = None) -> str:
+    """Build a Remote MCP URL from either a full URL or a platform token."""
+    raw_url = (url or "").strip()
+    raw_token = (token or "").strip()
+    if raw_url:
+        if raw_token and "{token}" in raw_url:
+            return raw_url.replace("{token}", urllib.parse.quote(raw_token, safe=""))
+        if raw_token and "token=" not in raw_url:
+            parsed = urllib.parse.urlparse(raw_url)
+            query = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+            query.append(("token", raw_token))
+            return urllib.parse.urlunparse(parsed._replace(query=urllib.parse.urlencode(query)))
+        return raw_url
+    if raw_token:
+        return DEFAULT_MCP_URL_TEMPLATE.replace("{token}", urllib.parse.quote(raw_token, safe=""))
+    return ""
+
+
+def mcp_config_from_env() -> Dict[str, Any]:
+    """Resolve Remote MCP config from environment variables only."""
+    token = os.environ.get("INDUSTRY_CHAIN_MCP_TOKEN") or os.environ.get("HANDAAS_MCP_TOKEN")
+    url = os.environ.get("INDUSTRY_CHAIN_MCP_URL") or os.environ.get("HANDAAS_MCP_URL")
+    resolved = build_mcp_url(url, token)
+    if not resolved:
+        return {}
+    return {"url": resolved, "token": token or "", "source": "environment"}
+
+
+def get_mcp_section(config: Dict[str, Any]) -> Dict[str, Any]:
+    section = config.get("mcp") or config.get("remote_mcp") or config.get("remoteMcp")
+    if not isinstance(section, dict):
+        raise ConfigError("缺少 mcp 配置段")
+    token = section.get("token")
+    url = build_mcp_url(str(section.get("url") or ""), str(token or ""))
+    if not url:
+        raise ConfigError("mcp.url 或 mcp.token 至少需要配置一个")
+    return {**section, "url": url, "token": token or "", "source": "config"}
+
+
+def resolve_mcp_config(config_path: Optional[str] = None, *, allow_example: bool = False) -> Dict[str, Any]:
+    """Resolve Remote MCP config, preferring env token/URL over config file."""
+    env_config = mcp_config_from_env()
+    if env_config:
+        return env_config
+    try:
+        config, _ = load_config(config_path, allow_example=allow_example)
+        return get_mcp_section(config)
+    except ConfigError:
+        return {}
 
 
 def md5_hex(text: str) -> str:

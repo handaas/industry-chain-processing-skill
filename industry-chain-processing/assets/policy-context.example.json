@@ -1,0 +1,20 @@
+{
+  "policy_context": [
+    {
+      "region": "国家部委",
+      "topic": "产业政策主题",
+      "finding": "用一句话概括从政府官网或权威来源收集到的政策要点。",
+      "source": "来源名称",
+      "url": "https://example.com/policy-source",
+      "date": "2026-01-01"
+    },
+    {
+      "region": "广东省",
+      "topic": "地方支持方向",
+      "finding": "概括地方在资金、试点、研发、基础设施或监管方面的政策重点。",
+      "source": "来源名称",
+      "url": "https://example.com/local-policy-source",
+      "date": "2026-01-01"
+    }
+  ]
+}

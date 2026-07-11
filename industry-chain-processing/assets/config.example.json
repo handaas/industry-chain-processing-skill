@@ -1,4 +1,8 @@
 {
+  "mcp": {
+    "url": "https://mcp.handaas.com/industry-chain/industry_chain?token={token}",
+    "token": "your_remote_mcp_token_optional_if_url_has_no_token"
+  },
   "handaas": {
     "base_url": "https://console.handaas.com",
     "integrator_id": "your_integrator_id",
@@ -8,11 +12,14 @@
       "工商照面": {
         "product_id": "your_real_product_id_for_business_profile"
       },
-      "工商年报": {
-        "product_id": "your_real_product_id_for_annual_report"
+      "企业简介": {
+        "product_id": "your_real_product_id_for_enterprise_profile"
       },
-      "招聘统计": {
-        "product_id": "your_real_product_id_for_recruiting_stats"
+      "企业业务": {
+        "product_id": "your_real_product_id_for_enterprise_business_info"
+      },
+      "企业标签": {
+        "product_id": "your_real_product_id_for_enterprise_tags"
       },
       "招聘明细": {
         "product_id": "your_real_product_id_for_recruiting_detail"

@@ -4,13 +4,16 @@ Use this playbook to turn a natural business request into an internal industry-c
 
 ## Intent routing
 
+- “专业产业链分析报告 / 图谱展示”: first load `project-context.md`; reuse current project graph and node records; focus on hierarchy and analysis, not enterprise linking.
 - “分析 XX 产业链”: produce an industry map, priority segments, enterprise types, search strategy, and next actions. Do not require API calls.
-- “找企业 / 企业线索 / 招商名单”: build the map, choose high-value refined targets, then run dry-run or real local query depending on config and user wording.
+- “找企业 / 企业线索 / 招商名单 / 挂链报告”: build the map, choose high-value refined targets, then run dry-run or real MCP/local query depending on config and user wording.
 - “判断这些企业”: map each company to the most plausible refined segment, collect or request evidence, then classify confidence.
 - “优化结果 / 太宽 / 噪声多”: inspect false positives, add exclusions, strengthen business evidence, then re-run dry-run.
 - “不要真实调用 / 先模拟”: never call network; output assumptions, search strategy, and redacted request shape.
 
 ## Auto-decomposition logic
+
+If project graph context exists, map the request to the canonical project chain and L5 nodes first. Only build a generated map when no project graph is available or the requested chain is absent.
 
 For a broad industry, build the map with these lenses:
 

@@ -1,4 +1,4 @@
 interface:
   display_name: "旷湖产业链分析"
-  short_description: "自动拆解产业链、挖掘企业线索并生成报告。"
-  default_prompt: "使用旷湖产业链分析，输入一个行业、赛道或企业名单，自动完成产业链拆解、企业线索挖掘、证据核验、挂链建议和静态 HTML/Markdown 报告生成。"
+  short_description: "复用项目图谱完成产业链研究、精准企业挂链、政策分析与专业报告。"
+  default_prompt: "使用 $industry-chain-processing 分析给定产业或企业：优先复用项目 L1/L2/L3/L5 图谱；企业挂链按节点生成 HandaaS 高筛 ES，多路召回后通过已配置的 MCP 做独立来源证据复核，并直接输出结构化结果与专业 HTML/Markdown 报告。"
