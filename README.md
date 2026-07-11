@@ -24,8 +24,6 @@
 - [高级命令行用法](#高级命令行用法)
 - [仓库结构](#仓库结构)
 - [故障排查](#故障排查)
-- [安全边界](#安全边界)
-- [开发与发布](#开发与发布)
 
 ## 你可以直接怎么说
 
@@ -958,50 +956,4 @@ python scripts/link_enterprises.py \
   --page-size 5
 ```
 
-## 安全边界
-
-- 不提交真实配置文件。
-- 不在 Git、日志、Issue、截图中暴露 `secret_id`、`secret_key`、signature、token。
-- 模拟运行会脱敏敏感字段。
-- 本仓库不托管用户数据，不保存调用结果。
-- 真实接口调用可能产生费用；不确定时先模拟运行。
-
-## 开发与发布
-
-无需真实凭证即可运行的本地校验：
-
-```bash
-cd industry-chain-processing-skill
-python3 -m unittest discover -s tests -v
-python3 -m py_compile industry-chain-processing/scripts/*.py
-python3 industry-chain-processing/scripts/validate_config.py \
-  --config industry-chain-processing/assets/config.example.json \
-  --allow-placeholders
-python3 industry-chain-processing/scripts/link_enterprises.py \
-  --config industry-chain-processing/assets/config.example.json \
-  --chain "低空经济" \
-  --node "eVTOL整机制造" \
-  --path "低空经济产业链>航空器制造>eVTOL整机制造" \
-  --dry-run
-python3 industry-chain-processing/scripts/render_report.py \
-  --input industry-chain-processing/assets/report.example.json \
-  --output /tmp/industry-report.html
-```
-
-CI 会在 Python 3.10 和 3.12 上执行离线测试、脚本编译和 JSON 资产校验。贡献约定见 [CONTRIBUTING.md](CONTRIBUTING.md)，安全问题处理方式见 [SECURITY.md](SECURITY.md)。
-
-推送到 GitHub：
-
-```bash
-cd /path/to/industry-chain-processing-skill
-git push
-```
-
-发布前检查：
-
-```bash
-git status --short
-git grep -n "secret_key\|secret_id\|signature\|token" -- . ':!README.md' ':!industry-chain-processing/assets/config.example.json'
-```
-
-如果 grep 命中真实凭证，必须删除后再提交。
+贡献说明见 [CONTRIBUTING.md](CONTRIBUTING.md)，安全问题处理方式见 [SECURITY.md](SECURITY.md)。
