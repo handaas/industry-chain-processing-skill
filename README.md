@@ -265,18 +265,18 @@ industry-chain-processing/assets/config.example.json
     "secret_id": "your_secret_id",
     "secret_key": "your_secret_key",
     "products": {
-      "工商照面": {"product_id": "your_real_product_id_for_business_profile"},
-      "企业简介": {"product_id": "your_real_product_id_for_enterprise_profile"},
-      "企业业务": {"product_id": "your_real_product_id_for_enterprise_business_info"},
-      "企业标签": {"product_id": "your_real_product_id_for_enterprise_tags"},
-      "招聘明细": {"product_id": "your_real_product_id_for_recruiting_detail"},
-      "知识产权统计": {"product_id": "your_real_product_id_for_ip_stats"},
-      "企业招投标信息": {"product_id": "your_real_product_id_for_bidding"}
+      "工商照面": {"product_id": "66dbccbec7a7e3460f5e613f"},
+      "企业简介": {"product_id": "6682b0b370f56cb7d77701e0"},
+      "企业业务": {"product_id": "66e55613ae988a28c6db9259"},
+      "企业标签": {"product_id": "669e531ce1fd7bff82321d8d"},
+      "招聘明细": {"product_id": "66b338e274bf098447db7f09"},
+      "知识产权统计": {"product_id": "66a0e1e7983134b5bb828503"},
+      "企业招投标信息": {"product_id": "66bf124bf134a4c21b4fc2fa"}
     }
   },
   "high_screen": {
     "url": "https://example.com/enterprise-search-endpoint",
-    "product_id": "your_real_product_id_for_enterprise_search",
+    "product_id": "690dcb1b9c9dc8d0ff3c40eb",
     "secret_id": "your_high_screen_secret_id",
     "secret_key": "your_high_screen_secret_key",
     "default_page_size": 20
@@ -288,8 +288,9 @@ industry-chain-processing/assets/config.example.json
 
 - `mcp.url` / `mcp.token` 是可选 MCP 入口；也可以完全通过 `INDUSTRY_CHAIN_MCP_TOKEN` / `INDUSTRY_CHAIN_MCP_URL` 配置。
 - `handaas` 用于不经过 MCP 的本地证据接口备用模式；`high_screen` 用于需要完整 ES 条件组执行和 `--require-es` 验收的场景。
+- 示例中的 `product_id` 是旷湖平台稳定公开产品 ID，不是账号凭证，用户无需替换。
 - `handaas.products` 里的产品名是本地调用别名；Remote / 本地 MCP 模式不会读取这些商品 ID，而是使用 MCP 服务暴露的 HandaaS 接口封装工具。
-- 如果你更喜欢简写，`products` 也支持 `"工商照面": "真实商品ID"` 这种字符串形式。
+- 如果你更喜欢简写，`products` 也支持 `"工商照面": "66dbccbec7a7e3460f5e613f"` 这种字符串形式。
 - `secret_id`、`secret_key` 属于凭证，只放在本地配置文件里，不要提交到 Git。
 
 脚本按以下顺序选择数据接入：
@@ -936,7 +937,7 @@ python scripts/validate_config.py --config /path/to/handaas.config.json
 
 ### 6. 仍是占位值
 
-说明配置中还有 `your_...`、`your_real_product_id_for_...` 或其他占位值。真实查询前必须替换成自己的接口参数和真实商品 ID。
+说明配置中仍有 `your_...` 凭证或接口地址占位值。产品 ID 已使用旷湖平台稳定公开 ID，不需要用户替换；真实查询前只需配置自己的 URL、对接器 ID 和密钥。
 
 ### 7. 查询太宽或噪声太多
 

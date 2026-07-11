@@ -84,18 +84,18 @@ Scripts read JSON config from:
     "secret_id": "your_secret_id",
     "secret_key": "your_secret_key",
     "products": {
-      "工商照面": {"product_id": "your_real_product_id_for_business_profile"},
-      "企业简介": {"product_id": "your_real_product_id_for_enterprise_profile"},
-      "企业业务": {"product_id": "your_real_product_id_for_enterprise_business_info"},
-      "企业标签": {"product_id": "your_real_product_id_for_enterprise_tags"},
-      "招聘明细": {"product_id": "your_real_product_id_for_recruiting_detail"},
-      "知识产权统计": {"product_id": "your_real_product_id_for_ip_stats"},
-      "企业招投标信息": {"product_id": "your_real_product_id_for_bidding"}
+      "工商照面": {"product_id": "66dbccbec7a7e3460f5e613f"},
+      "企业简介": {"product_id": "6682b0b370f56cb7d77701e0"},
+      "企业业务": {"product_id": "66e55613ae988a28c6db9259"},
+      "企业标签": {"product_id": "669e531ce1fd7bff82321d8d"},
+      "招聘明细": {"product_id": "66b338e274bf098447db7f09"},
+      "知识产权统计": {"product_id": "66a0e1e7983134b5bb828503"},
+      "企业招投标信息": {"product_id": "66bf124bf134a4c21b4fc2fa"}
     }
   },
   "high_screen": {
     "url": "https://example.com/enterprise-search-endpoint",
-    "product_id": "your_real_product_id_for_enterprise_search",
+    "product_id": "690dcb1b9c9dc8d0ff3c40eb",
     "secret_id": "your_high_screen_secret_id",
     "secret_key": "your_high_screen_secret_key",
     "default_page_size": 20
@@ -105,7 +105,7 @@ Scripts read JSON config from:
 
 If `mcp.url`/`mcp.token` or the MCP environment variables are valid, local `handaas` is optional. `high_screen` is also optional unless the workflow uses `--require-es` for precise node-linking acceptance.
 
-`products` values may be strings or objects with `product_id`. Fill every `product_id` with the real product/商品 ID from the user's data-product console. Keep credentials local and do not commit account-specific config.
+`products` values may be strings or objects with `product_id`. The example uses stable public HandaaS product IDs and users should not replace them. Only account-specific URLs, integrator IDs, secret IDs, secret keys, and Remote MCP tokens remain local configuration and must not be committed.
 
 ## Safety
 
