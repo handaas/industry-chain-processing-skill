@@ -90,4 +90,4 @@ Put every field-level `nin` / `neq` clause directly in top-level `must`. HandaaS
 - Over-broad recall: add a reliable industry route, tighten exact terms, and add field-scoped `nin/neq` clauses inside `must`.
 - Noisy samples: add exclusions for unrelated industries, pure trade, training, consulting, repair, retail.
 - Parameter error: simplify to base `must` + one evidence `should` + minimal field-level `nin/neq` clauses in `must`.
-- Remote MCP keyword fallback: mark `precision_limited=true`; do not accept it as a precise ES acceptance result.
+- Remote MCP should execute the condition through `advanced_filter_get_enterprise_list`. Only an older MCP without that tool may use keyword fallback; mark fallback `precision_limited=true` and do not accept it as a precise ES result.

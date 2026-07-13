@@ -254,7 +254,7 @@ def recommendations(route_rows: Sequence[Dict[str, Any]], overlap: Sequence[Dict
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluate HandaaS ES condition routes with labels, anchors, and evidence review.")
-    parser.add_argument("--config", help="Config JSON containing high_screen and optional local HandaaS products")
+    parser.add_argument("--config", help="Config JSON containing unified handaas credentials and products")
     parser.add_argument("--chain", required=True)
     parser.add_argument("--node", required=True)
     parser.add_argument("--path")

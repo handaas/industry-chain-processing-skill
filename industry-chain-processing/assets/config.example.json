@@ -29,14 +29,11 @@
       },
       "企业招投标信息": {
         "product_id": "66bf124bf134a4c21b4fc2fa"
+      },
+      "高筛企业清单": {
+        "product_id": "690dcb1b9c9dc8d0ff3c40eb",
+        "default_page_size": 50
       }
     }
-  },
-  "high_screen": {
-    "url": "https://example.com/enterprise-search-endpoint",
-    "product_id": "690dcb1b9c9dc8d0ff3c40eb",
-    "secret_id": "your_high_screen_secret_id",
-    "secret_key": "your_high_screen_secret_key",
-    "default_page_size": 20
   }
 }

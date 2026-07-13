@@ -282,11 +282,11 @@ python industry-chain-processing/scripts/link_enterprises.py \
 
 脚本会自动优先使用 MCP。只有没有 MCP 配置，或显式传 `--local` 时，才走下面的本地直连接口配置。
 
-仅配置 Remote MCP token 即可完成产业链报告、企业定位、企业证据复核、政策分析和关键词候选召回。如果发布的 Remote MCP 未提供完整高筛条件组接口，`link_enterprises.py` 会把候选召回标记为 `precision_limited`；需要严格 ES 挂链验收时使用 `--require-es`，并配置已开通的完整 `high_screen` 接口。
+仅配置 Remote MCP token 即可完成产业链报告、企业定位、企业证据复核、政策分析和完整高筛候选召回。当前官方 MCP 的 `advanced_filter_get_enterprise_list` 可直接执行 Skill 生成的条件组；`--require-es` 同样支持 Remote MCP。只有连接旧版 MCP 且缺少该工具时才降级为关键词召回并标记 `precision_limited`。
 
 ## 本地直连 HandaaS 数据接口（备用）
 
-如果不使用官方 Remote MCP，也不启动本地 MCP，可以让 Skill 直接读取你本机的 HandaaS / high_screen 配置。只做产业链分析和模拟运行时可以先不填真实接口参数；要真实查询企业时再创建本地配置文件：
+如果不使用官方 Remote MCP，也不启动本地 MCP，可以让 Skill 直接读取你本机的统一 HandaaS 配置。高筛和其他产品复用同一组 `integrator_id`、`secret_id`、`secret_key`，不需要单独配置 `high_screen`。只做产业链分析和模拟运行时可以先不填真实接口参数；要真实查询企业时再创建本地配置文件：
 
 macOS / Linux（仓库根目录）：
 
@@ -329,15 +329,12 @@ $env:INDUSTRY_CHAIN_CONFIG = $configPath
       "企业标签": {"product_id": "669e531ce1fd7bff82321d8d"},
       "招聘明细": {"product_id": "66b338e274bf098447db7f09"},
       "知识产权统计": {"product_id": "66a0e1e7983134b5bb828503"},
-      "企业招投标信息": {"product_id": "66bf124bf134a4c21b4fc2fa"}
+      "企业招投标信息": {"product_id": "66bf124bf134a4c21b4fc2fa"},
+      "高筛企业清单": {
+        "product_id": "690dcb1b9c9dc8d0ff3c40eb",
+        "default_page_size": 50
+      }
     }
-  },
-  "high_screen": {
-    "url": "https://example.com/enterprise-search-endpoint",
-    "product_id": "690dcb1b9c9dc8d0ff3c40eb",
-    "secret_id": "your_high_screen_secret_id",
-    "secret_key": "your_high_screen_secret_key",
-    "default_page_size": 20
   }
 }
 ```
@@ -345,9 +342,11 @@ $env:INDUSTRY_CHAIN_CONFIG = $configPath
 字段说明：
 
 - `mcp.url` / `mcp.token` 是可选 MCP 入口；也可以完全通过 `INDUSTRY_CHAIN_MCP_TOKEN` / `INDUSTRY_CHAIN_MCP_URL` 配置。
-- `handaas` 用于不经过 MCP 的本地证据接口备用模式；`high_screen` 用于需要完整 ES 条件组执行和 `--require-es` 验收的场景。
+- `handaas` 是本地直连的唯一配置段；工商、业务、专利、招投标和高筛产品全部复用同一组 HandaaS 凭证。
+- `handaas.products.高筛企业清单` 用于本地完整 ES 条件组执行；Skill 会自动用 `base_url` 和 `integrator_id` 组装调用地址。
 - 示例中的 `product_id` 是旷湖平台稳定公开产品 ID，不是账号凭证，用户无需替换。
 - `handaas.products` 里的产品名是本地调用别名；Remote / 本地 MCP 模式不会读取这些商品 ID，而是使用 MCP 服务暴露的 HandaaS 接口封装工具。
+- 旧版顶层 `high_screen` 配置仍可读取以便迁移，但新配置不得重复填写第二套凭证。
 - 如果你更喜欢简写，`products` 也支持 `"工商照面": "66dbccbec7a7e3460f5e613f"` 这种字符串形式。
 - `secret_id`、`secret_key` 属于凭证，只放在本地配置文件里，不要提交到 Git。
 

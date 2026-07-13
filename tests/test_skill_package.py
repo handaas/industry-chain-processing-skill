@@ -32,13 +32,14 @@ class SkillPackageTests(unittest.TestCase):
             "招聘明细": "66b338e274bf098447db7f09",
             "知识产权统计": "66a0e1e7983134b5bb828503",
             "企业招投标信息": "66bf124bf134a4c21b4fc2fa",
+            "高筛企业清单": "690dcb1b9c9dc8d0ff3c40eb",
         }
         actual = {
             name: value["product_id"]
             for name, value in config["handaas"]["products"].items()
         }
         self.assertEqual(actual, expected)
-        self.assertEqual(config["high_screen"]["product_id"], "690dcb1b9c9dc8d0ff3c40eb")
+        self.assertNotIn("high_screen", config)
 
     def test_os_specific_setup_guidance_is_packaged(self):
         reference = (SKILL / "references" / "os-operations.md").read_text(encoding="utf-8")

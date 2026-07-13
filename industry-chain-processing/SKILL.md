@@ -15,7 +15,7 @@ When this skill is active:
 2. Accept natural goals such as “分析低空经济”, “找 eVTOL 企业”, “判断这些企业挂到哪里”, “分析某企业属于哪个产业链环节”, “生成智能汽车专业产业链分析报告”, or “分析某企业是否适合挂到自动驾驶节点”.
 3. Prefer project context before inventing structure whenever a current `industry-chain-map` project is available. Reuse its L1/L2/L3/L5 graph and node records for industry-chain analysis reports.
 4. Keep enterprises out of the graph hierarchy. Enterprises are linked records attached to L5 nodes, never graph children.
-5. Prefer MCP for HandaaS enterprise evidence when `INDUSTRY_CHAIN_MCP_URL`, `INDUSTRY_CHAIN_MCP_TOKEN`, or config `mcp.url/mcp.token` exists. Precise enterprise linking requires the full `high_screen` ES interface; when Remote MCP exposes only keyword search, label it as a recall preview and use local `high_screen` for the final candidate pool.
+5. Prefer MCP for HandaaS enterprise evidence and complete high-screen execution when `INDUSTRY_CHAIN_MCP_URL`, `INDUSTRY_CHAIN_MCP_TOKEN`, or config `mcp.url/mcp.token` exists. Use `advanced_filter_get_enterprise_list` for precise candidates. Only older MCP deployments without that tool may fall back to keyword recall and must be marked `precision_limited`. Local direct mode uses `handaas.products.高筛企业清单` with the same HandaaS credentials as every other product; never require a duplicate top-level `high_screen` section.
 6. Treat MCP as a HandaaS interface-wrapper layer only. Do not expect MCP-side tools for building conditions, scoring, linking, or report composition; those are local skill workflows.
 7. For professional industry-chain analysis reports, allow web collection for the report abstract and “产业背景与分析依据” when network tools are available. Prefer official/authoritative sources; never invent current market or policy facts.
 8. For regional policy analysis, combine HandaaS policy MCP tools (`policy_bigdata_policy_search`, `policy_bigdata_policy_info`, `policy_bigdata_approved_project_stats`) with web search/browsing when available. Keep source, URL, region, and date for every web policy item.
@@ -116,7 +116,7 @@ Choose the smallest complete workflow:
 
 3. **Execute and deduplicate candidates**
    - For precise linking, execute all ES routes and merge by enterprise ID or normalized legal name.
-   - Remote `enterprise_get_keyword_search` is a documented fallback when full ES is unavailable. Set `precision_limited=true`; never describe it as full high-screen execution.
+   - Prefer Remote MCP `advanced_filter_get_enterprise_list` for full ES execution. `enterprise_get_keyword_search` is only a documented fallback for older MCP deployments. Set `precision_limited=true` for fallback and never describe it as full high-screen execution.
    - Use `--require-es` for acceptance runs so keyword fallback fails explicitly.
 
 4. **Review enterprise evidence**

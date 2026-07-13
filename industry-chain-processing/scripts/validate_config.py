@@ -75,10 +75,19 @@ def validate(config: Dict[str, Any], *, allow_placeholders: bool = False) -> Dic
 
     try:
         high_screen = get_high_screen_section(config)
-        check_required("high_screen", high_screen, ["url", "product_id", "secret_id", "secret_key"], allow_placeholders, local_errors, local_warnings)
+        check_required(
+            "handaas.products.高筛企业清单",
+            high_screen,
+            ["url", "product_id", "secret_id", "secret_key"],
+            allow_placeholders,
+            local_errors,
+            local_warnings,
+        )
         page_size = high_screen.get("default_page_size", 20)
         if not isinstance(page_size, int) or not (1 <= page_size <= 50):
-            local_warnings.append("high_screen.default_page_size 建议为 1-50 的整数")
+            local_warnings.append("handaas.products.高筛企业清单.default_page_size 建议为 1-50 的整数")
+        if high_screen.get("source") == "legacy_high_screen":
+            local_warnings.append("顶层 high_screen 配置已兼容但不再推荐；请迁移到 handaas.products.高筛企业清单并复用同一组凭证")
     except ConfigError as exc:
         local_errors.append(str(exc))
 
@@ -93,7 +102,7 @@ def validate(config: Dict[str, Any], *, allow_placeholders: bool = False) -> Dic
         errors.extend(remote_errors)
         errors.extend(local_errors)
     elif modes["remote_mcp"]["ok"] and local_errors:
-        warnings.append("Remote MCP 已可用；本地 handaas/high_screen 凭证未完整配置但不影响 token 模式。")
+        warnings.append("Remote MCP 已可用；本地 handaas 凭证或产品配置未完整，但不影响 token 模式。")
 
     return {
         "ok": not errors,

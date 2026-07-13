@@ -75,7 +75,7 @@ $env:INDUSTRY_CHAIN_MCP_URL = "http://127.0.0.1:8000/mcp"
 
 Run checks from the repository root. macOS/Linux uses `python industry-chain-processing/scripts/...`; Windows PowerShell uses `python .\industry-chain-processing\scripts\...`. See `os-operations.md` for complete commands.
 
-If `list-tools` works, the skill can use the MCP service without separately configuring local `handaas` credentials. Reports, policy analysis, enterprise positioning, evidence review, and keyword candidate recall work in this mode. Precise condition-group ES acceptance still requires an opened `high_screen` interface when the Remote MCP does not expose an equivalent product.
+If `list-tools` works, the skill can use the MCP service without separately configuring local `handaas` credentials. The current official MCP exposes `advanced_filter_get_enterprise_list`, so reports, policy analysis, enterprise positioning, evidence review, and complete condition-group ES recall all work with the platform token alone. Keyword fallback is only for older MCP deployments that do not expose this tool.
 
 ## MCP tools the skill may use
 
@@ -121,22 +121,21 @@ Scripts read JSON config from:
       "企业标签": {"product_id": "669e531ce1fd7bff82321d8d"},
       "招聘明细": {"product_id": "66b338e274bf098447db7f09"},
       "知识产权统计": {"product_id": "66a0e1e7983134b5bb828503"},
-      "企业招投标信息": {"product_id": "66bf124bf134a4c21b4fc2fa"}
+      "企业招投标信息": {"product_id": "66bf124bf134a4c21b4fc2fa"},
+      "高筛企业清单": {
+        "product_id": "690dcb1b9c9dc8d0ff3c40eb",
+        "default_page_size": 50
+      }
     }
-  },
-  "high_screen": {
-    "url": "https://example.com/enterprise-search-endpoint",
-    "product_id": "690dcb1b9c9dc8d0ff3c40eb",
-    "secret_id": "your_high_screen_secret_id",
-    "secret_key": "your_high_screen_secret_key",
-    "default_page_size": 20
   }
 }
 ```
 
-If `mcp.url`/`mcp.token` or the MCP environment variables are valid, local `handaas` is optional. `high_screen` is also optional unless the workflow uses `--require-es` for precise node-linking acceptance.
+If `mcp.url`/`mcp.token` or the MCP environment variables are valid, local `handaas` is optional, including for `--require-es`. In local-direct mode, high-screen uses `handaas.products.高筛企业清单` and reuses the same HandaaS credentials as every other product.
 
 `products` values may be strings or objects with `product_id`. The example uses stable public HandaaS product IDs and users should not replace them. Only account-specific URLs, integrator IDs, secret IDs, secret keys, and Remote MCP tokens remain local configuration and must not be committed.
+
+Legacy top-level `high_screen` remains readable for migration only. Do not create a second `secret_id` / `secret_key`; move its product ID under `handaas.products`.
 
 ## Safety
 

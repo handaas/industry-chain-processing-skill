@@ -41,7 +41,7 @@ Configuration precedence:
 
 1. `INDUSTRY_CHAIN_MCP_TOKEN` / `INDUSTRY_CHAIN_MCP_URL`
 2. Config `mcp.url` / `mcp.token`
-3. Local direct HandaaS/high-screen config when MCP is unavailable or `--local` is explicit
+3. Unified local `handaas` config when MCP is unavailable or `--local` is explicit
 
 Remote token mode must not require local `integrator_id`, `secret_id`, `secret_key`, or per-product configuration. `scripts/mcp_client.py ping` performs a real MCP connection/tool-list initialization; it is not a config-only check.
 
@@ -49,10 +49,11 @@ Use only HandaaS wrapper tools, including enterprise search/profile/tags/busines
 
 Current precision boundary:
 
-- Remote MCP supports reports, enterprise positioning, evidence review, policy analysis, and keyword candidate recall.
-- When Remote MCP does not expose the full condition-group high-screen product, mark recall as `precision_limited` / `handaas_mcp_keyword_fallback`.
-- `--require-es` must reject keyword fallback.
-- Strict ES acceptance uses configured `high_screen` execution.
+- Current Remote/local MCP exposes `advanced_filter_get_enterprise_list` and executes the full condition-group high-screen product, so token-only mode supports strict ES acceptance.
+- When an older MCP does not expose that tool, mark recall as `precision_limited` / `handaas_mcp_keyword_fallback`.
+- `--require-es` must reject keyword fallback but accept the MCP high-screen tool.
+- Local direct strict ES uses `handaas.products.高筛企业清单`; it reuses `handaas.integrator_id`, `secret_id`, and `secret_key`. Do not add a second top-level `high_screen` section to new examples.
+- Legacy top-level `high_screen` remains parser-compatible only for migration.
 
 ## Stable public HandaaS product IDs
 
@@ -67,7 +68,7 @@ These are platform identifiers, not secrets. Keep README, `assets/config.example
 | 招聘明细 | `66b338e274bf098447db7f09` |
 | 知识产权统计 | `66a0e1e7983134b5bb828503` |
 | 企业招投标信息 | `66bf124bf134a4c21b4fc2fa` |
-| 完整高筛企业名单 | `690dcb1b9c9dc8d0ff3c40eb` |
+| 高筛企业清单 | `690dcb1b9c9dc8d0ff3c40eb` |
 
 Account URLs, integrator IDs, secret IDs, secret keys, tokens, and signatures remain private local configuration.
 

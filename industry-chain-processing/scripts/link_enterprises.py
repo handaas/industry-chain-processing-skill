@@ -13,11 +13,11 @@ from common import ConfigError, get_handaas_section, get_high_screen_section, js
 from enterprise_chain_positioning import evidence_error, evidence_signals
 from evidence_call import call_handaas, call_remote_evidence
 from enterprise_search_preview import (
+    REMOTE_KEYWORD_SEARCH_TOOL,
     REMOTE_SEARCH_TOOL,
     build_enterprise_search_request,
     call_enterprise_search_preview,
     call_remote_enterprise_search_preview,
-    extract_keywords_from_condition,
 )
 from mcp_client import has_remote_mcp_config
 from project_context import build_project_context, name_score
@@ -373,7 +373,7 @@ def main() -> None:
     parser.add_argument("--project-node", help="Canonical project L5 node override")
     parser.add_argument("--with-evidence", action="store_true", help="Call configured evidence products for sample companies.")
     parser.add_argument("--evidence-product", action="append", default=[], help="Evidence product name. Repeatable.")
-    parser.add_argument("--require-es", action="store_true", help="Fail instead of using MCP keyword fallback when local high-screen ES is unavailable.")
+    parser.add_argument("--require-es", action="store_true", help="Require complete high-screen execution through MCP or unified local HandaaS config; reject keyword fallback.")
     parser.add_argument("--include-raw-evidence", action="store_true", help="Include full evidence payloads in output.")
     parser.add_argument("--seed-limit", type=int, default=8, help="Maximum project representative-company seeds to resolve.")
     parser.add_argument("--max-candidates", type=int, default=20, help="Maximum merged candidates sent to evidence review.")
@@ -428,36 +428,34 @@ def main() -> None:
     remote_enabled = not args.local and has_remote_mcp_config(args.config)
     page_size = min(max(args.page_size, 1), 50)
     products = args.evidence_product or DEFAULT_EVIDENCE_PRODUCTS
-    if high_screen:
+    if remote_enabled:
+        search_capability = "handaas_mcp_high_screen_es"
+        search_mode = "mcp_high_screen"
+    elif high_screen:
         search_capability = "handaas_high_screen_es"
         search_mode = "local_es"
-    elif remote_enabled:
-        search_capability = "handaas_mcp_keyword_fallback"
-        search_mode = "mcp_keyword_fallback"
     else:
         if not args.dry_run:
-            raise SystemExit("未配置可执行的高筛 ES 或 Remote MCP。请配置 high_screen，或配置 MCP 后使用关键词降级模式。")
+            raise SystemExit("未配置可执行的高筛 ES 或 Remote MCP。请配置 MCP，或在 handaas.products 中配置高筛企业清单。")
         example_config, _ = load_config(args.config, allow_example=True)
         high_screen = get_high_screen_section(example_config)
         search_capability = "handaas_high_screen_es_dry_run"
         search_mode = "local_es"
-    if args.require_es and search_mode != "local_es":
-        raise SystemExit("当前仅有 Remote MCP 关键词召回，无法执行完整高筛 ES；--require-es 已拒绝降级。")
 
     if args.dry_run:
         enterprise_search: Dict[str, Any]
         if search_mode == "local_es":
             enterprise_search = {
-                "request": redact(build_enterprise_search_request(high_screen or {}, condition, 1, page_size, pagination=True)),
+                "request": redact(build_enterprise_search_request(high_screen or {}, condition, 1, page_size, pagination=False)),
                 "capability": search_capability,
             }
         else:
             enterprise_search = {
                 "tool": REMOTE_SEARCH_TOOL,
-                "keywords": extract_keywords_from_condition(condition, [plan["node_context"]["node"], plan["node_context"]["chain"]], limit=8),
+                "filter": condition,
                 "pageSize": page_size,
                 "capability": search_capability,
-                "precision_limited": True,
+                "precision_limited": False,
             }
         payload = {
             "report_type": "enterprise_node_linking",
@@ -490,6 +488,7 @@ def main() -> None:
 
     merged_candidates: Dict[str, Dict[str, Any]] = {}
     route_results: List[Dict[str, Any]] = []
+    keyword_fallback_used = False
     for route in plan.get("recall_routes") or [{"id": "primary", "condition": condition}]:
         route_id = str(route.get("id") or "primary")
         route_condition = route.get("condition") or condition
@@ -504,7 +503,9 @@ def main() -> None:
                 page_size=page_size,
                 config_path=args.config,
                 timeout=120,
+                allow_keyword_fallback=not args.require_es,
             )
+            keyword_fallback_used = keyword_fallback_used or bool(route_preview.get("precision_limited"))
         route_rows = [item for item in route_preview.get("samples", []) if isinstance(item, dict)]
         for company in route_rows:
             merge_candidate(merged_candidates, company, route_id)
@@ -538,7 +539,9 @@ def main() -> None:
                 page_size=10,
                 config_path=args.config,
                 timeout=120,
+                allow_keyword_fallback=not args.require_es,
             )
+            keyword_fallback_used = keyword_fallback_used or bool(seed_preview.get("precision_limited"))
         seed_rows = [item for item in seed_preview.get("samples", []) if isinstance(item, dict)]
         selected = select_seed_matches(seed_name, seed_rows)
         if not selected:
@@ -563,7 +566,7 @@ def main() -> None:
     candidate_limit = max(args.max_candidates, 1)
     candidates = all_candidates[:candidate_limit]
     preview = {
-        "mode": search_mode,
+        "mode": "mcp_keyword_fallback" if keyword_fallback_used else search_mode,
         "route_results": route_results,
         "seed_results": seed_results,
         "unique_candidate_count_before_limit": len(all_candidates),
@@ -606,9 +609,9 @@ def main() -> None:
     payload = {
         "report_type": "enterprise_node_linking",
         "title": args.report_title or f"{plan['node_context']['chain']} - {plan['node_context']['node']} 节点企业挂链报告",
-        "mode": search_mode,
+        "mode": "mcp_keyword_fallback" if keyword_fallback_used else search_mode,
         "search_capability": search_capability,
-        "precision_limited": search_mode != "local_es",
+        "precision_limited": keyword_fallback_used,
         "chain": plan["node_context"]["chain"],
         "node": plan["node_context"]["node"],
         "path": plan["node_context"]["canonical_path"],
@@ -638,8 +641,9 @@ def main() -> None:
             "把 rejected 企业的噪声特征补充到节点排除词后重新运行",
         ],
     }
-    if search_mode != "local_es":
-        payload["next_actions"].insert(0, "配置 high_screen 后执行完整 ES，当前 Remote MCP 结果仅作召回预览")
+    if keyword_fallback_used:
+        payload["search_capability"] = "handaas_mcp_keyword_fallback"
+        payload["next_actions"].insert(0, f"升级 MCP 以启用 {REMOTE_SEARCH_TOOL}；当前仅通过 {REMOTE_KEYWORD_SEARCH_TOOL} 召回预览")
     if not emit_outputs(payload, args):
         print_json(payload)
 

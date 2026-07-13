@@ -17,6 +17,7 @@ EXAMPLE_CONFIG = SKILL_DIR / "assets" / "config.example.json"
 DEFAULT_CONFIG = pathlib.Path.home() / ".industry-chain-processing" / "handaas.config.json"
 DEFAULT_MCP_URL_TEMPLATE = "https://mcp.handaas.com/industry-chain/industry_chain?token={token}"
 SECRET_KEYWORDS = ("secret", "signature", "token", "api_key", "apikey", "password")
+HIGH_SCREEN_PRODUCT_NAMES = ("高筛企业清单", "高筛条件组企业清单", "advanced_filter_condition_list")
 
 
 class ConfigError(RuntimeError):
@@ -200,10 +201,46 @@ def get_handaas_section(config: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get_high_screen_section(config: Dict[str, Any]) -> Dict[str, Any]:
-    section = config.get("high_screen") or config.get("highScreen")
-    if not isinstance(section, dict):
-        raise ConfigError("缺少 high_screen 配置段")
-    return section
+    """Resolve high-screen from unified HandaaS credentials.
+
+    A legacy top-level high_screen section remains readable for migration, but
+    new configuration must keep the product under handaas.products so the same
+    connector credentials are reused by every HandaaS product.
+    """
+    handaas = config.get("handaas") or config.get("daas")
+    if isinstance(handaas, dict):
+        products = handaas.get("products")
+        if isinstance(products, dict):
+            for product_name in HIGH_SCREEN_PRODUCT_NAMES:
+                if product_name not in products:
+                    continue
+                item = products[product_name]
+                product_id = item if isinstance(item, str) else (
+                    item.get("product_id") or item.get("id") or item.get("_id")
+                    if isinstance(item, dict) else ""
+                )
+                if not product_id:
+                    raise ConfigError(f"handaas.products.{product_name} 缺少 product_id")
+                base_url = str(handaas.get("base_url") or "").rstrip("/")
+                integrator_id = str(handaas.get("integrator_id") or "")
+                url = str(handaas.get("url") or handaas.get("call_url") or "")
+                if not url and base_url and integrator_id:
+                    url = f"{base_url}/api/v1/integrator/call_api/{integrator_id}"
+                default_page_size = item.get("default_page_size", 50) if isinstance(item, dict) else 50
+                return {
+                    "url": url,
+                    "product_id": str(product_id),
+                    "secret_id": handaas.get("secret_id"),
+                    "secret_key": handaas.get("secret_key"),
+                    "default_page_size": default_page_size,
+                    "source": f"handaas.products.{product_name}",
+                }
+
+    legacy = config.get("high_screen") or config.get("highScreen")
+    if isinstance(legacy, dict):
+        return {**legacy, "source": "legacy_high_screen"}
+    names = "、".join(HIGH_SCREEN_PRODUCT_NAMES)
+    raise ConfigError(f"缺少 handaas.products 高筛产品，支持名称：{names}")
 
 
 def product_id_of(products: Dict[str, Any], product_name: str) -> str:
